@@ -389,7 +389,7 @@ app.use(express.static(path.join(__dirname, "public")));
 // ============================================================
 const MONGODB_URI = process.env.MONGODB_URI;
 const client = new MongoClient(MONGODB_URI);
-let db, usersCollection, codesCollection, submittedCodesCollection, spinsCollection, shopCollection, licensesCollection, cardTransactionsCollection, accountsCollection;
+let db, usersCollection, codesCollection, submittedCodesCollection, spinsCollection, shopCollection, licensesCollection, cardTransactionsCollection, accountsCollection, toolUsageHistoryCollection;
 let dbReady = false;
 async function connectDB() {
     try {
@@ -403,6 +403,7 @@ async function connectDB() {
         shopCollection = db.collection("shop");
         cardTransactionsCollection = db.collection("cardTransactions");
         accountsCollection = db.collection("accounts");
+        toolUsageHistoryCollection = db.collection("toolUsageHistory");
         await accountsCollection.createIndex({ username: 1 }, { unique: true });
         await accountsCollection.createIndex({ email: 1 });
         await accountsCollection.createIndex({ token: 1 }, { sparse: true });
@@ -420,7 +421,10 @@ async function connectDB() {
         await cardTransactionsCollection.createIndex({ status: 1 });
         await cardTransactionsCollection.createIndex({ createdAt: -1 });
         await cardTransactionsCollection.createIndex({ serial: 1 }, { sparse: true });
+        await toolUsageHistoryCollection.createIndex({ key: 1, createdAt: -1 });
+        await toolUsageHistoryCollection.createIndex({ createdAt: -1 });
         console.log("💳 cardTransactions index ready");
+        console.log("📜 toolUsageHistory index ready");
 
         // Tự động kiểm tra và tạo key ngay cho các đơn đã nạp thẻ thành công mà chưa kịp cấp key
         setTimeout(async () => {
@@ -947,6 +951,74 @@ app.get("/licenses-key-ngu", requireAdmin, async (req, res) => {
     await waitForDB();
     const list = await licensesCollection.find().sort({ createdAt: -1 }).toArray();
     res.json(list);
+});
+app.get("/api/admin/licenses", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const list = await licensesCollection.find().sort({ createdAt: -1 }).toArray();
+        res.json({ success: true, data: list });
+    } catch (err) {
+        console.error("[ADMIN LICENSES] list error:", err.message);
+        res.status(500).json({ success: false, message: "Không thể tải danh sách key" });
+    }
+});
+app.post("/api/admin/licenses/create-many", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const count = Math.max(1, Math.min(100, parseInt(req.body?.count || "1", 10) || 1));
+        const days = Math.max(1, Math.min(3650, parseInt(req.body?.days || "30", 10) || 30));
+        const maxUses = Math.max(1, Math.min(1000000, parseInt(req.body?.maxUses || "100", 10) || 100));
+
+        const created = [];
+        for (let i = 0; i < count; i++) {
+            let key;
+            while (true) {
+                key = generateLicenseKey();
+                const exist = await licensesCollection.findOne({ key });
+                if (!exist) break;
+            }
+            const expire = new Date();
+            expire.setDate(expire.getDate() + days);
+            await licensesCollection.insertOne({
+                key,
+                hwid: null,
+                status: "active",
+                expire,
+                maxUses,
+                usedCount: 0,
+                createdAt: new Date(),
+                createdBy: "admin-panel"
+            });
+            created.push({ key, expire, maxUses, status: "active" });
+        }
+        return res.json({ success: true, count: created.length, data: created });
+    } catch (err) {
+        console.error("[ADMIN LICENSES] create-many error:", err.message);
+        return res.status(500).json({ success: false, message: "Không thể tạo key" });
+    }
+});
+app.post("/api/admin/licenses/delete", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const key = String(req.body?.key || "").trim().toUpperCase();
+        if (!key) return res.status(400).json({ success: false, message: "Thiếu key" });
+        const result = await licensesCollection.deleteOne({ key });
+        return res.json({ success: true, deleted: result.deletedCount > 0, key });
+    } catch (err) {
+        console.error("[ADMIN LICENSES] delete error:", err.message);
+        return res.status(500).json({ success: false, message: "Không thể xóa key" });
+    }
+});
+app.get("/api/admin/tool-usage-history", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const limit = Math.min(200, Math.max(1, parseInt(req.query.limit || "100", 10) || 100));
+        const list = await toolUsageHistoryCollection.find().sort({ createdAt: -1 }).limit(limit).toArray();
+        res.json({ success: true, data: list });
+    } catch (err) {
+        console.error("[ADMIN TOOL HISTORY] list error:", err.message);
+        res.status(500).json({ success: false, message: "Không thể tải lịch sử" });
+    }
 });
 async function requireLicense(req, res, next) {
     try {
@@ -1537,6 +1609,27 @@ function getElLicenseRemaining(license, usageCost = 0) {
     return Math.max(0, maxUses - usedCount - usageCost);
 }
 
+async function recordToolUsageLog({ key, hostId, platform, action, userKey, ip, usageCost, remaining, success, message }) {
+    try {
+        if (!toolUsageHistoryCollection) return;
+        await toolUsageHistoryCollection.insertOne({
+            key: typeof key === "string" ? key.toUpperCase() : key || null,
+            hostId: String(hostId || "").trim() || null,
+            platform: String(platform || "").trim() || null,
+            action: String(action || "").trim() || null,
+            userKey: String(userKey || "").trim() || null,
+            ip: String(ip || "").trim() || null,
+            usageCost: Number(usageCost) || 0,
+            remaining: Number.isFinite(Number(remaining)) ? Number(remaining) : null,
+            success: Boolean(success),
+            message: typeof message === "string" ? message.slice(0, 200) : null,
+            createdAt: new Date()
+        });
+    } catch (err) {
+        console.warn("[TOOL USAGE HISTORY] log failed:", err.message);
+    }
+}
+
 // ===== ENDPOINT TOOLBOX =====
 app.post(
     "/api/el-dorado/toolbox",
@@ -1671,6 +1764,18 @@ app.post(
 
             const remaining = getElLicenseRemaining(req.license, usageCost);
             console.log(`[TOOLBOX SUCCESS] action=${action}, hostId=${hostId}, platform=${platform}, licenseKey=${licenseKey}, userKey=${userKey || "(none)"}, ip=${clientIp}, cost=${usageCost}, remaining=${remaining ?? "unlimited"}`);
+            await recordToolUsageLog({
+                key: req.license?.key,
+                hostId,
+                platform,
+                action,
+                userKey,
+                ip: clientIp,
+                usageCost,
+                remaining: remaining ?? undefined,
+                success: true,
+                message: "success"
+            });
             const responseBody = { success: true, action, usageCost };
             if (isCharacterFeature) {
                 responseBody.characterId = sendResult.characterId;
@@ -1683,6 +1788,18 @@ app.post(
             return res.json(responseBody);
         } catch (err) {
             console.error(`[TOOLBOX ERROR] action=${req.body?.action || "unknown"}, hostId=${req.body?.accountId || "unknown"}, platform=${req.body?.platform || "unknown"}, licenseKey=${req.license?.key || "(none)"}, userKey=${req.body?.userKey || "(none)"}, error=${err.message}`);
+            await recordToolUsageLog({
+                key: req.license?.key,
+                hostId: typeof req.body?.accountId === "string" ? req.body.accountId.trim() : null,
+                platform: typeof req.body?.platform === "string" ? req.body.platform.trim().toUpperCase() : null,
+                action: typeof req.body?.action === "string" ? req.body.action.trim().toLowerCase() : null,
+                userKey: typeof req.body?.userKey === "string" ? req.body.userKey.trim() : null,
+                ip: getIP(req),
+                usageCost: 0,
+                remaining: undefined,
+                success: false,
+                message: err.isPublic ? err.message : "Không thể xử lý yêu cầu"
+            });
             return res.status(err.isPublic ? 400 : 500).json({
                 success: false,
                 message: err.isPublic ? err.message : "Không thể xử lý yêu cầu"
