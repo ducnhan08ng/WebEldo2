@@ -1,92 +1,253 @@
 <!-- Bảng điều khiển Quản lý Toolbox Admin -->
-<div style="margin: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9; font-family: sans-serif;">
+<div style="margin: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9; font-family: sans-serif; max-width: 1300px;">
   <h2>Quản Lý License Key Toolbox</h2>
-  
-  <div style="margin-bottom: 15px;">
-    <label><b>Admin Key:</b> <input type="password" id="adminKeyInput" placeholder="Nhập ADMIN_KEY trong .env"></label>
-  </div>
-  
-  <div style="margin-bottom: 15px;">
-    <label>Số ngày HSD: <input type="number" id="daysInput" value="30" style="width: 60px;"></label> | 
-    <label>Số lượt dùng: <input type="number" id="usesInput" value="100" style="width: 60px;"></label>
-  </div>
-  
-  <button onclick="createLicense()" style="padding: 5px 15px; cursor: pointer;">Tạo License Key Mới</button>
-  <button onclick="loadLicenses()" style="padding: 5px 15px; cursor: pointer;">Xem Danh Sách Key</button>
 
-  <div id="licenseResult" style="margin-top: 15px; color: green; font-weight: bold;"></div>
+  <div style="margin-bottom: 15px;">
+    <label><b>Admin Key:</b> <input type="password" id="adminKeyInput" placeholder="Nhập ADMIN_KEY trong .env" style="width: 280px;"></label>
+  </div>
 
-  <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: center;">
+  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; align-items: end;">
+    <div>
+      <label>Số lượng key:<br><input type="number" id="countInput" value="1" min="1" max="100" style="width: 90px;"></label>
+    </div>
+    <div>
+      <label>Ngày HSD:<br><input type="number" id="daysInput" value="30" min="1" style="width: 90px;"></label>
+    </div>
+    <div>
+      <label>Số lượt/key:<br><input type="number" id="usesInput" value="100" min="1" style="width: 110px;"></label>
+    </div>
+    <button onclick="createLicenseBatch()" style="padding: 8px 16px; cursor: pointer;">Tạo key mới</button>
+    <button onclick="loadLicenses()" style="padding: 8px 16px; cursor: pointer;">Tải danh sách</button>
+    <button onclick="loadToolHistory()" style="padding: 8px 16px; cursor: pointer;">Xem lịch sử</button>
+  </div>
+
+  <div style="margin-bottom: 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+    <input type="text" id="deleteKeyInput" placeholder="Nhập key cần xóa" style="width: 260px; padding: 7px 10px;">
+    <button onclick="deleteSelectedKey()" style="padding: 8px 16px; cursor: pointer; background: #dc2626; color: white; border: none;">Xóa key hiện tại</button>
+  </div>
+
+  <div id="licenseResult" style="margin-top: 10px; color: green; font-weight: bold; min-height: 22px;"></div>
+
+  <h3 style="margin-top: 22px;">Danh sách key</h3>
+  <table border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse; text-align: center;">
      <thead style="background: #ddd;">
         <tr>
-            <th>License Key</th>
+            <th>Key</th>
             <th>Lượt Dùng</th>
             <th>Trạng Thái</th>
+            <th>HSD</th>
             <th>Ngày Tạo</th>
+            <th>Hành động</th>
         </tr>
      </thead>
      <tbody id="licenseTableBody">
-        <tr><td colspan="4">Chưa tải dữ liệu</td></tr>
+        <tr><td colspan="6">Chưa tải dữ liệu</td></tr>
      </tbody>
+  </table>
+
+  <h3 style="margin-top: 28px;">Lịch sử sử dụng tool</h3>
+  <table border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse; text-align: center;">
+    <thead style="background: #e5e7eb;">
+      <tr>
+        <th>Thời gian</th>
+        <th>Key</th>
+        <th>Account</th>
+        <th>Platform</th>
+        <th>Action</th>
+        <th>IP</th>
+        <th>Cost</th>
+        <th>Remaining</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody id="toolHistoryBody">
+      <tr><td colspan="9">Chưa tải lịch sử</td></tr>
+    </tbody>
   </table>
 </div>
 
 <script>
-// Chức năng Tạo Key gọi API /tao-license-key-deptrai
-async function createLicense() {
-  const adminKey = document.getElementById('adminKeyInput').value;
-  const days = document.getElementById('daysInput').value;
-  const maxUses = document.getElementById('usesInput').value;
+const adminKeyInput = document.getElementById('adminKeyInput');
+const deleteKeyInput = document.getElementById('deleteKeyInput');
+
+function getAdminKey() {
+  return (adminKeyInput.value || '').trim();
+}
+
+async function safeFetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  const rawText = await response.text();
+  let data = null;
+  if (rawText) {
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      throw new Error(`Server trả về HTML/text thay vì JSON. URL: ${url}. Mã trạng thái: ${response.status}. Nội dung: ${rawText.slice(0, 180)}`);
+    }
+  }
+  if (!response.ok) {
+    const message = data && data.message ? data.message : `HTTP ${response.status}`;
+    throw new Error(message);
+  }
+  return data;
+}
+
+function setResult(message, isError = false) {
+  const el = document.getElementById('licenseResult');
+  el.textContent = message;
+  el.style.color = isError ? '#b91c1c' : '#15803d';
+}
+
+async function createLicenseBatch() {
+  const adminKey = getAdminKey();
+  const count = Number(document.getElementById('countInput').value || 1);
+  const days = Number(document.getElementById('daysInput').value || 30);
+  const maxUses = Number(document.getElementById('usesInput').value || 100);
 
   if (!adminKey) return alert('Vui lòng nhập Admin Key!');
-  document.getElementById('licenseResult').innerText = 'Đang tạo...';
+  setResult('Đang tạo key...');
 
   try {
-      const response = await fetch('/tao-license-key-deptrai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminKey, days, maxUses })
-      });
-
-      const data = await response.json();
-      if(data.success) {
-          document.getElementById('licenseResult').innerText = '✅ Tạo thành công Key: ' + data.key;
-          loadLicenses(); // Tự động tải lại danh sách
-      } else {
-          document.getElementById('licenseResult').innerText = '❌ Lỗi: ' + (data.message || 'Sai Admin Key');
-      }
+    const data = await safeFetchJson('/api/admin/licenses/create-many?key=' + encodeURIComponent(adminKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ count, days, maxUses })
+    });
+    if (data.success) {
+      setResult(`✅ Đã tạo ${data.count} key mới.`);
+      const first = (data.data || [])[0];
+      if (first?.key) deleteKeyInput.value = first.key;
+      loadLicenses();
+      loadToolHistory();
+    } else {
+      setResult(data.message || 'Không thể tạo key', true);
+    }
   } catch (err) {
-      alert('Lỗi kết nối: ' + err.message);
+    setResult('Lỗi kết nối: ' + err.message, true);
   }
 }
 
-// Chức năng Tải Danh sách gọi API /licenses-key-ngu
 async function loadLicenses() {
-    const adminKey = document.getElementById('adminKeyInput').value;
-    if (!adminKey) return alert('Vui lòng nhập Admin Key để xem!');
-    
-    try {
-        const response = await fetch('/licenses-key-ngu?key=' + adminKey);
-        const data = await response.json();
-        
-        const tbody = document.getElementById('licenseTableBody');
-        tbody.innerHTML = '';
-        
-        if(Array.isArray(data)) {
-            data.forEach(item => {
-                const date = new Date(item.createdAt).toLocaleString('vi-VN');
-                tbody.innerHTML += `<tr>
-                    <td style="color:blue; font-weight:bold;">${item.key}</td>
-                    <td>${item.usedCount || 0} / ${item.maxUses || 'Vô hạn'}</td>
-                    <td style="color:${item.status==='active'?'green':'red'}">${item.status}</td>
-                    <td>${date}</td>
-                </tr>`;
-            });
-        } else {
-            alert('Không thể tải danh sách (Có thể sai Admin Key)');
-        }
-    } catch(err) {
-        alert('Lỗi lấy danh sách: ' + err.message);
+  const adminKey = getAdminKey();
+  if (!adminKey) return alert('Vui lòng nhập Admin Key để xem!');
+
+  try {
+    const data = await safeFetchJson('/api/admin/licenses?key=' + encodeURIComponent(adminKey));
+    const tbody = document.getElementById('licenseTableBody');
+    tbody.innerHTML = '';
+
+    if (!data.success || !Array.isArray(data.data)) {
+      alert('Không thể tải danh sách key');
+      return;
     }
+
+    if (!data.data.length) {
+      tbody.innerHTML = '<tr><td colspan="6">Không có key nào</td></tr>';
+      return;
+    }
+
+    data.data.forEach(item => {
+      const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
+      const expire = item.expire ? new Date(item.expire).toLocaleString('vi-VN') : '—';
+      const statusColor = item.status === 'active' ? 'green' : '#b91c1c';
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td style="color: blue; font-weight: bold; cursor: pointer;" onclick="selectKey('${item.key}')">${item.key}</td>
+        <td>${item.usedCount || 0} / ${item.maxUses || '∞'}</td>
+        <td style="color: ${statusColor}; text-transform: capitalize;">${item.status || 'unknown'}</td>
+        <td>${expire}</td>
+        <td>${createdDate}</td>
+        <td>
+          <button type="button" onclick="selectKey('${item.key}')">Chọn</button>
+          <button type="button" style="background:#dc2626;color:white;border:none;margin-left:6px;" onclick="deleteKeyByValue('${item.key}')">Xóa</button>
+        </td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    alert('Lỗi lấy danh sách key: ' + err.message);
+  }
 }
+
+function selectKey(key) {
+  if (!key) return;
+  deleteKeyInput.value = key;
+}
+
+async function deleteSelectedKey() {
+  const adminKey = getAdminKey();
+  const key = deleteKeyInput.value.trim();
+  if (!adminKey) return alert('Vui lòng nhập Admin Key!');
+  if (!key) return alert('Vui lòng nhập key cần xóa');
+  await deleteKeyByValue(key);
+}
+
+async function deleteKeyByValue(key) {
+  const adminKey = getAdminKey();
+  if (!adminKey) return alert('Vui lòng nhập Admin Key!');
+
+  if (!confirm('Bạn có chắc muốn xóa key: ' + key + '?')) return;
+
+  try {
+    const data = await safeFetchJson('/api/admin/licenses/delete?key=' + encodeURIComponent(adminKey), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key })
+    });
+    if (data.success && data.deleted) {
+      setResult('✅ Đã xóa key: ' + key);
+      deleteKeyInput.value = '';
+      loadLicenses();
+    } else {
+      setResult('❌ Không thể xóa key hoặc key không tồn tại', true);
+    }
+  } catch (err) {
+    setResult('Lỗi xóa key: ' + err.message, true);
+  }
+}
+
+async function loadToolHistory() {
+  const adminKey = getAdminKey();
+  if (!adminKey) return alert('Vui lòng nhập Admin Key để xem lịch sử!');
+
+  try {
+    const data = await safeFetchJson('/api/admin/tool-usage-history?key=' + encodeURIComponent(adminKey));
+    const tbody = document.getElementById('toolHistoryBody');
+    tbody.innerHTML = '';
+
+    if (!data.success || !Array.isArray(data.data)) {
+      alert('Không thể tải lịch sử sử dụng');
+      return;
+    }
+
+    if (!data.data.length) {
+      tbody.innerHTML = '<tr><td colspan="9">Chưa có dữ liệu sử dụng</td></tr>';
+      return;
+    }
+
+    data.data.forEach(item => {
+      const row = document.createElement('tr');
+      const date = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
+      row.innerHTML = `
+        <td>${date}</td>
+        <td>${item.key || '—'}</td>
+        <td>${item.hostId || '—'}</td>
+        <td>${item.platform || '—'}</td>
+        <td>${item.action || '—'}</td>
+        <td>${item.ip || '—'}</td>
+        <td>${item.usageCost ?? 0}</td>
+        <td>${item.remaining ?? '∞'}</td>
+        <td style="color:${item.success ? 'green' : 'red'}; font-weight:bold;">${item.success ? 'Thành công' : (item.message || 'Lỗi')}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  } catch (err) {
+    alert('Lỗi lấy lịch sử: ' + err.message);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  loadLicenses();
+  loadToolHistory();
+});
 </script>

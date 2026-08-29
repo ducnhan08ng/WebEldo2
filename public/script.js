@@ -35,7 +35,8 @@ const PRICE_DATA = {
         { name: "x1.000 Magic",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
         { name: "x10.000 Ruby",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
         { name: "100.000 Diamond",     price: "100.000₫",     icon: "fa-bolt",           color: "#2563eb" },
-    ]
+        { name: "Hero Loki/Hell 150 Souls",     price: "150.000₫",     icon: "fa-bolt",           color: "#2563eb" },
+    ]   
 };
 
 let elDoradoPage = 1;
