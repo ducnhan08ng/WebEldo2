@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận Gibong và Azure</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="theme-color" content="#020617">
+</head>
+<body>
+
+<!-- ============ CONTAINER CHÍNH ============ -->
+<div class="container">
+    <div class="logo-section">
+        <div class="logo-badge">
+            <i class="fa-solid fa-gem"></i>
+            <span>Minh Hùng</span>
+        </div>
+        <h1>Web ElDorado ToolBox Bởi Minh Hùng</h1>
+        <p class="subtitle">Tham Gia Ngay Event 1500 Sub Nhận Gibong và Azure</p>
+    </div>
+
+    <!-- Nút nhận mã -->
+    <button onclick="getReward()" class="btn-primary">
+        <i class="fa-solid fa-gift"></i>
+        <span>Nhận mã</span>
+    </button>
+    <div id="code" class="code-display">— — — —</div>
+
+    <!-- ============ FORM NHẬP THÔNG TIN ============ -->
+<div id="codeInputSection" class="code-input-section" style="display:none;">
+    <p class="sub">Nhập thông tin tài khoản và mã để gửi</p>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-user"></i> User ID</label>
+            <input id="userIdInput" type="text" class="form-input" placeholder="Nhập ID tài khoản">
+        </div>
+        <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-gamepad"></i> Nền tảng</label>
+            <select id="platformSelect" class="form-select">
+                <option value="">Chọn nền tảng</option>
+                <option value="AMO">AMO</option>
+                <option value="ATV">ATV</option>
+                <option value="LG">LG</option>
+                <option value="SSVN">SSVN</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-row">
+        <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-key"></i> Mã của bạn</label>
+            <input id="userCodeInput" type="text" class="form-input" placeholder="Mã đã nhận">
+        </div>
+        <div class="form-group">
+            <label class="form-label">
+                <i class="fa-solid fa-heart"></i> 
+                <br>
+                <a href="https://www.youtube.com" target="_blank" style="color:#60a5fa; font-size:11px;">▶ Xem video</a>
+            </label>
+            <input id="lucyAnswerInput" type="number" class="form-input" placeholder="Nhập số lượng">
+        </div>
+        <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-gem"></i> Số Ruby</label>
+            <input id="rubyAnswerInput" type="number" class="form-input" placeholder="Số lượng Ruby">
+        </div>
+    </div>
+
+    <button onclick="submitCode()" class="btn-primary submit-btn">
+        <i class="fa-solid fa-paper-plane"></i>
+        <span>Gửi mã</span>
+    </button>
+    <div id="submitStatus" class="submit-status"></div>
+</div>
+
+    <!-- Nút mở các modal -->
+    <button onclick="openBuyKeyModal()" class="btn-primary open-buykey-btn" style="background: linear-gradient(90deg, #10b981, #059669); margin-top: 14px; box-shadow: 0 10px 25px rgba(16,185,129,0.35);">
+        <i class="fa-solid fa-cart-shopping"></i> Mua Key Tool Box
+    </button>
+    <button onclick="openElDoradoToolbox()" class="btn-toolbox open-toolbox-btn">
+        <i class="fa-solid fa-bolt"></i> Toolbox El Dorado
+    </button>
+    <button onclick="openPrice()" class="btn-secondary open-price-btn">
+        <i class="fa-solid fa-tags"></i> Bảng giá El Dorado
+    </button>
+    <button onclick="openGTDPrice()" class="btn-secondary open-price-btn">
+        <i class="fa-solid fa-tags"></i> Bảng giá GTD
+    </button>
+    <button onclick="openShop()" class="btn-secondary open-shop-btn">
+        <i class="fa-solid fa-store"></i> Shop Acc
+    </button>
+
+    <!-- Social -->
+    <div class="social-buttons">
+        <a class="social-btn youtube" href="https://www.youtube.com/@minhhung3667" target="_blank">
+            <i class="fa-brands fa-youtube"></i> YouTube
+        </a>
+        <a class="social-btn" href="https://discord.com/users/chosenone_3667" target="_blank">
+            <i class="fa-brands fa-discord"></i> Discord
+        </a>
+    </div>
+</div>
+
+<!-- ============ MODAL BẢNG GIÁ EL DORADO (dạng card) ============ -->
+<div id="priceModal" class="modal">
+    <div class="modal-content price-modal-content">
+        <span class="close" onclick="closePrice()">&times;</span>
+        <div class="modal-header">
+            <div class="modal-icon"><i class="fa-solid fa-coins"></i></div>
+            <h2>Bảng giá El Dorado</h2>
+            <h4>AMO/ATV/SSVN/LG</h4>
+            <p>Cập nhật giá các vật phẩm game</p>
+        </div>
+        <div id="priceGrid" class="price-grid"></div>
+        <div id="pricePagination" class="pagination"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL BẢNG GIÁ GTD (dạng card) ============ -->
+<div id="gtdPriceModal" class="modal">
+    <div class="modal-content price-modal-content">
+        <span class="close" onclick="closeGTDPrice()">&times;</span>
+        <div class="modal-header">
+            <div class="modal-icon gtd"><i class="fa-solid fa-gem"></i></div>
+            <h2>Bảng giá GTD</h2>
+            <p>Cập nhật giá các vật phẩm game</p>
+        </div>
+        <div id="gtdPriceGrid" class="price-grid"></div>
+        <div id="gtdPricePagination" class="pagination"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL SHOP ACC ============ -->
+<div id="shopModal" class="modal">
+    <div class="modal-content shop-content">
+        <span class="close" onclick="closeShop()">&times;</span>
+        <h2><i class="fa-solid fa-store"></i> Shop Acc</h2>
+        <div class="shop-viewer">
+            <button class="nav-btn left" onclick="prevAcc()">‹</button>
+            <button class="nav-btn right" onclick="nextAcc()">›</button>
+            <div id="shopSingle" class="shop-single"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============ MODAL TOOLBOX EL DORADO ============ -->
+<div id="elDoradoToolboxModal" class="modal">
+    <div class="modal-content toolbox-content">
+        <span class="close" onclick="closeElDoradoToolbox()">&times;</span>
+
+        <!-- Header -->
+        <div class="toolbox-heading">
+            <div class="toolbox-badge">
+                <i class="fa-solid fa-shield-halved"></i> SECURE TOOL
+            </div>
+            <h2><i class="fa-solid fa-bolt" style="color:#fbbf24"></i> El Dorado Toolbox</h2>
+            <p>Nhập thông tin tài khoản và license key để sử dụng tính năng tự động gửi Ruby, 7s hoặc nâng cấp nhân vật.</p>
+        </div>
+
+        <!-- Progress steps -->
+        <div class="toolbox-progress">
+            <div class="toolbox-step is-active" id="step1">
+                <span>1</span>
+                Nhập thông tin
+            </div>
+            <div class="toolbox-step" id="step2">
+                <span>2</span>
+                Xác thực
+            </div>
+            <div class="toolbox-step" id="step3">
+                <span>3</span>
+                Xử lý
+            </div>
+            <div class="toolbox-step" id="step4">
+                <span>4</span>
+                Hoàn tất
+            </div>
+        </div>
+
+        <!-- Form -->
+        <form id="elDoradoToolboxForm" onsubmit="submitElDoradoToolbox(event)">
+            <div class="toolbox-grid">
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-user"></i> ID</label>
+                    <input id="elHostIdInput" type="text" class="form-input" placeholder="Nhập ID tài khoản">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-gamepad"></i> Platform</label>
+                    <select id="elPlatformSelect" class="form-select">
+                        <option value="">Chọn nền tảng</option>
+                        <option value="AMO">AMO</option>
+                        <option value="ATV">ATV</option>
+                        <option value="LG">LG</option>
+                        <option value="SS">SS</option>
+                    </select>
+                </div>
+
+                <div class="form-group toolbox-field-wide" id="elEmailGroup" style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-envelope"></i> Email (ATV)</label>
+                    <input id="elEmailInput" type="email" class="form-input" placeholder="email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-key"></i> Mã Xác Minh</label>
+                    <input id="elUserKeyInput" type="text" class="form-input" placeholder="Mã Xác Minh">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-list-check"></i> Chế độ</label>
+                    <select id="elToolboxActionSelect" class="form-select" onchange="updateElDoradoToolboxMode()">
+                        <option value="ruby">Gửi Ruby</option>
+                        <option value="feature11">Random 7s</option>
+                        <option value="feature13">Gửi 7s (nhân vật cụ thể)</option>
+                    </select>
+                </div>
+
+                <!-- Ruby amount -->
+                <div class="form-group toolbox-field-wide" id="elRubyAmountGroup">
+                    <label class="form-label"><i class="fa-solid fa-gem"></i> Số lượng Ruby</label>
+                    <input id="elRubyAmountInput" type="number" class="form-input" placeholder="1 - 10.000" min="1" max="10000">
+                </div>
+
+                <!-- Character fields -->
+                <div class="form-group" data-el-character-feature style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-user-ninja"></i> Level hiện tại</label>
+                    <input id="elCharacterLevelInput" type="number" class="form-input" value="100" readonly>
+                </div>
+                <div class="form-group" data-el-character-feature style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-crown"></i> Max Level</label>
+                    <input id="elCharacterMaxLevelInput" type="number" class="form-input" value="100" readonly>
+                </div>
+                <div class="form-group toolbox-field-wide" data-el-feature13 style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-id-badge"></i> ID Nhân vật</label>
+                    <select id="elCharacterIdInput" class="form-select">
+                        <option value="63">Ace</option>
+                        <option value="66">Echo</option>
+                        <option value="67">Smart</option>
+                        <option value="68">Khan</option>
+                        <option value="49">Lucy Thiên Thần</option>
+                        <option value="50">Lucy Oto</option>
+                        <option value="64">Bee</option>
+                        <option value="65">Ruby</option>
+                        <option value="48">Gold</option>
+                        <option value="56">Gin</option>
+                        <option value="62">Bensi</option>
+                        <option value="75">Jey</option>
+                        <option value="81">Koo</option>
+                        <option value="99">Thrue</option>
+                    </select>
+                </div>
+
+                <!-- License key -->
+                <div class="form-group toolbox-field-wide">
+                    <label class="form-label"><i class="fa-solid fa-shield"></i> License Key</label>
+                    <input id="elLicenseKeyInput" type="password" class="form-input" placeholder="XXXX-XXXX-XXXX-XXXX">
+                </div>
+            </div>
+
+            <button type="submit" id="elDoradoSubmitBtn" class="btn-toolbox toolbox-submit-btn">
+                <i class="fa-solid fa-play"></i>
+                <span id="elStepSendLabel">Bắt đầu gửi Ruby (1 lượt)</span>
+            </button>
+        </form>
+
+        <div id="elDoradoToolboxStatus" class="toolbox-status"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL MUA KEY TOOL BOX ============ -->
+<div id="buyKeyModal" class="modal">
+    <div class="modal-content buykey-content">
+        <span class="close" onclick="closeBuyKeyModal()">&times;</span>
+
+        <!-- Header -->
+        <div class="toolbox-heading">
+            <div class="toolbox-badge" style="border-color: rgba(16,185,129,0.4); color:#34d399; background: rgba(16,185,129,0.15);">
+                <i class="fa-solid fa-bolt"></i> TỰ ĐỘNG 24/7
+            </div>
+            <h2><i class="fa-solid fa-key" style="color:#10b981"></i> Mua Key Tool Box</h2>
+            <p>Nạp thẻ cào tự động nhận Key Tool Box hoặc nạp thêm lượt dùng cho Key có sẵn.</p>
+            
+            <!-- Nút xem Key đã lưu trong Local Storage -->
+            <div class="saved-keys-toggle-wrapper">
+                <button type="button" class="btn-saved-keys-toggle" onclick="toggleSavedKeysPanel()">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Key của bạn</span>
+                    <span class="saved-keys-count-pill" id="savedKeysCountPill">0</span>
+                    <i class="fa-solid fa-chevron-down" id="savedKeysToggleIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- PANEL HIỂN THỊ DANH SÁCH KEY ĐÃ LƯU TRÊN LOCAL STORAGE -->
+        <div id="savedKeysPanel" class="saved-keys-panel" style="display: none;">
+            <div class="saved-keys-panel-header">
+                <span><i class="fa-solid fa-wallet" style="color: #10b981;"></i> Key đã lưu trên trình duyệt</span>
+                <button type="button" class="btn-clear-all-keys" onclick="clearAllSavedKeys()" title="Xóa toàn bộ lịch sử key">
+                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả
+                </button>
+            </div>
+            <div id="savedKeysListContainer" class="saved-keys-list">
+                <!-- Danh sách key sẽ được nạp từ Local Storage -->
+            </div>
+        </div>
+
+        <!-- BẢNG GIÁ QUY ĐỔI -->
+        <div class="buykey-rate-box">
+            <div class="buykey-rate-title"><i class="fa-solid fa-tags"></i> Bảng giá quy đổi lượt dùng:</div>
+            <div class="buykey-rate-grid">
+                <div class="rate-item" onclick="selectBuyAmount(50000)">
+                    <span class="amount">20.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">2 lượt</span>
+                </div>
+                <div class="rate-item" onclick="selectBuyAmount(50000)">
+                    <span class="amount">50.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">5 lượt</span>
+                </div>
+                <div class="rate-item" onclick="selectBuyAmount(100000)">
+                    <span class="amount">100.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">10 lượt</span>
+                </div>
+                <div class="rate-item" onclick="selectBuyAmount(200000)">
+                    <span class="amount">200.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">30 lượt</span>
+                </div>
+                <div class="rate-item" onclick="selectBuyAmount(300000)">
+                    <span class="amount">300.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">50 lượt</span>
+                </div>
+                <div class="rate-item" onclick="selectBuyAmount(500000)">
+                    <span class="amount">500.000đ</span>
+                    <span class="arrow">➔</span>
+                    <span class="uses">100 lượt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- CẢNH BÁO QUAN TRỌNG -->
+        <div class="buykey-warning-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span><strong>LƯU Ý:</strong> Chọn đúng mệnh giá! Thẻ sai mệnh giá hoặc thẻ lỗi sẽ <strong>KHÔNG</strong> được tạo key hoặc cộng lượt!</span>
+        </div>
+
+        <!-- FORM GỬI THẺ -->
+        <form id="buyKeyForm" onsubmit="submitBuyKeyCard(event)">
+            <div class="toolbox-grid">
+                <!-- Loại thẻ -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-sim-card"></i> Loại thẻ</label>
+                    <select id="buyKeyTelcoSelect" class="form-select" required>
+                        <option value="">Chọn loại thẻ</option>
+                        <option value="VIETTEL">Viettel</option>
+                        <option value="VINAPHONE">Vinaphone (Vina)</option>
+                        <option value="GARENA">Garena</option>
+                    </select>
+                </div>
+
+                <!-- Mệnh giá -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-money-bill-wave"></i> Mệnh giá</label>
+                    <select id="buyKeyAmountSelect" class="form-select" required onchange="updateSelectedAmountNote()">
+                        <option value="">Chọn mệnh giá</option>
+                        <option value="20000">20.000đ (+2 lượt dùng)</option>
+                        <option value="50000">50.000đ (+5 lượt dùng)</option>
+                        <option value="100000">100.000đ (+10 lượt dùng)</option>
+                        <option value="200000">200.000đ (+30 lượt dùng)</option>
+                        <option value="300000">300.000đ (+50 lượt dùng)</option>
+                        <option value="500000">500.000đ (+100 lượt dùng)</option>
+                    </select>
+                </div>
+
+                <!-- Số Serial -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-barcode"></i> Số Serial</label>
+                    <input id="buyKeySerialInput" type="text" class="form-input" placeholder="Nhập số seri thẻ" required autocomplete="off">
+                </div>
+
+                <!-- Mã PIN -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-lock"></i> Mã thẻ (PIN)</label>
+                    <input id="buyKeyCodeInput" type="text" class="form-input" placeholder="Nhập mã thẻ cào" required autocomplete="off">
+                </div>
+
+                <!-- CÂU HỎI: BẠN ĐÃ CÓ KEY HAY CHƯA -->
+                <div class="form-group toolbox-field-wide">
+                    <label class="form-label"><i class="fa-solid fa-circle-question"></i> Bạn đã có key hay chưa?</label>
+                    <div class="has-key-options">
+                        <label class="radio-label">
+                            <input type="radio" name="hasKeyRadio" value="false" checked onchange="toggleHasKeyMode(false)">
+                            <span><i class="fa-solid fa-circle-plus"></i> Chưa có key (Tạo key mới)</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="hasKeyRadio" value="true" onchange="toggleHasKeyMode(true)">
+                            <span><i class="fa-solid fa-arrow-up-right-dots"></i> Đã có key (Thêm lượt vào key)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Ô NHẬP KEY (Chỉ hiện khi ĐÃ CÓ KEY) -->
+                <div class="form-group toolbox-field-wide" id="existingKeyGroup" style="display: none;">
+                    <label class="form-label"><i class="fa-solid fa-key"></i> License Key của bạn</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input id="existingKeyInput" type="text" class="form-input" placeholder="Nhập key của bạn (VD: XXXX-XXXX-XXXX)" style="text-transform: uppercase;">
+                        <button type="button" class="btn-check-key" onclick="verifyInputKey()">Kiểm tra</button>
+                    </div>
+                    <div id="keyCheckMessage" class="key-check-msg"></div>
+                </div>
+            </div>
+
+            <button type="submit" id="buyKeySubmitBtn" class="btn-toolbox" style="background: linear-gradient(90deg, #10b981, #059669); margin-top: 18px; box-shadow: 0 10px 25px rgba(16,185,129,0.35);">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span id="buyKeyBtnText">Nạp thẻ & Nhận Key</span>
+            </button>
+        </form>
+
+        <!-- KHU VỰC TRẠNG THÁI & KẾT QUẢ -->
+        <div id="buyKeyStatusBox" class="buykey-status-box" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- ============ POPUP UPDATE ============ -->
+<div id="updatePopup" class="popup-overlay">
+    <div class="popup-box">
+        <h2><i class="fa-solid fa-circle-info" style="color:#3b82f6"></i> Thông báo</h2>
+        <p>Cập Nhật Acc Mới Trong Shop Acc </p>
+        <p>Cập Nhật Bảng Giá và Giao Diện Web </p>
+        <div class="popup-buttons">
+            <button onclick="hideFor2Hours()">Ẩn 2 giờ</button>
+            <button onclick="closePopup()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!-- Bảng điều khiển Quản lý Toolbox Admin -->
+<div style="margin: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9; font-family: sans-serif;">
+  <h2>Quản Lý License Key Toolbox</h2>
+  
+  <div style="margin-bottom: 15px;">
+    <label><b>Admin Key:</b> <input type="password" id="adminKeyInput" placeholder="Nhập ADMIN_KEY trong .env"></label>
+  </div>
+  
+  <div style="margin-bottom: 15px;">
+    <label>Số ngày HSD: <input type="number" id="daysInput" value="30" style="width: 60px;"></label> | 
+    <label>Số lượt dùng: <input type="number" id="usesInput" value="100" style="width: 60px;"></label>
+  </div>
+  
+  <button onclick="createLicense()" style="padding: 5px 15px; cursor: pointer;">Tạo License Key Mới</button>
+  <button onclick="loadLicenses()" style="padding: 5px 15px; cursor: pointer;">Xem Danh Sách Key</button>
+
+  <div id="licenseResult" style="margin-top: 15px; color: green; font-weight: bold;"></div>
+
+  <table border="1" style="margin-top: 20px; width: 100%; border-collapse: collapse; text-align: center;">
+     <thead style="background: #ddd;">
+        <tr>
+            <th>License Key</th>
+            <th>Lượt Dùng</th>
+            <th>Trạng Thái</th>
+            <th>Ngày Tạo</th>
+        </tr>
+     </thead>
+     <tbody id="licenseTableBody">
+        <tr><td colspan="4">Chưa tải dữ liệu</td></tr>
+     </tbody>
+  </table>
+</div>
+
+<script>
+// Chức năng Tạo Key gọi API /tao-license-key-deptrai
+async function createLicense() {
+  const adminKey = document.getElementById('adminKeyInput').value;
+  const days = document.getElementById('daysInput').value;
+  const maxUses = document.getElementById('usesInput').value;
+
+  if (!adminKey) return alert('Vui lòng nhập Admin Key!');
+  document.getElementById('licenseResult').innerText = 'Đang tạo...';
+
+  try {
+      const response = await fetch('/tao-license-key-deptrai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey, days, maxUses })
+      });
+
+      const data = await response.json();
+      if(data.success) {
+          document.getElementById('licenseResult').innerText = '✅ Tạo thành công Key: ' + data.key;
+          loadLicenses(); // Tự động tải lại danh sách
+      } else {
+          document.getElementById('licenseResult').innerText = '❌ Lỗi: ' + (data.message || 'Sai Admin Key');
+      }
+  } catch (err) {
+      alert('Lỗi kết nối: ' + err.message);
+  }
+}
+
+// Chức năng Tải Danh sách gọi API /licenses-key-ngu
+async function loadLicenses() {
+    const adminKey = document.getElementById('adminKeyInput').value;
+    if (!adminKey) return alert('Vui lòng nhập Admin Key để xem!');
+    
+    try {
+        const response = await fetch('/licenses-key-ngu?key=' + adminKey);
+        const data = await response.json();
+        
+        const tbody = document.getElementById('licenseTableBody');
+        tbody.innerHTML = '';
+        
+        if(Array.isArray(data)) {
+            data.forEach(item => {
+                const date = new Date(item.createdAt).toLocaleString('vi-VN');
+                tbody.innerHTML += `<tr>
+                    <td style="color:blue; font-weight:bold;">${item.key}</td>
+                    <td>${item.usedCount || 0} / ${item.maxUses || 'Vô hạn'}</td>
+                    <td style="color:${item.status==='active'?'green':'red'}">${item.status}</td>
+                    <td>${date}</td>
+                </tr>`;
+            });
+        } else {
+            alert('Không thể tải danh sách (Có thể sai Admin Key)');
+        }
+    } catch(err) {
+        alert('Lỗi lấy danh sách: ' + err.message);
+    }
+}
+</script>
