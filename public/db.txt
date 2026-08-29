@@ -1,3 +1,0 @@
-ducnhan31012008_db_user
-bdrW3YUAvyYmimap
-mongodb+srv://ducnhan31012008_db_user:bdrW3YUAvyYmimap@cluster0.1m3rzys.mongodb.net/?appName=Cluster0
