@@ -870,7 +870,6 @@ async function validateAndBindLicense(rawKey, rawHwid, clientIp = null) {
     await waitForDB();
     const key = typeof rawKey === "string" ? rawKey.trim().toUpperCase() : "";
     const hwid = typeof rawHwid === "string" ? rawHwid.trim() : "";
-    if (!key || !hwid) return { success: false, message: "Thiếu License Key hoặc mã thiết bị" };
     let license = await licensesCollection.findOne({ key });
     if (!license) return { success: false, message: "License Key không tồn tại. Mua License Key Liên Hệ Qua Discord." };
     if (license.status !== "active") return { success: false, message: "License Key đã bị khóa" };
@@ -881,10 +880,21 @@ async function validateAndBindLicense(rawKey, rawHwid, clientIp = null) {
         return { success: false, message: "License Key đã hết lượt sử dụng" };
     }
 
+    const bindingMode = license.bindingMode === "unlimited" ? "unlimited" : "normal";
+    if (bindingMode === "normal" && !key) return { success: false, message: "Thiếu License Key" };
+    if (bindingMode === "normal" && !hwid) return { success: false, message: "Thiếu License Key hoặc mã thiết bị" };
+
     const updateFields = { lastLogin: new Date() };
     if (clientIp) {
         updateFields.lastIp = clientIp;
         if (!license.ip) updateFields.ip = clientIp;
+    }
+
+    if (bindingMode === "unlimited") {
+        const updateDoc = { $set: updateFields };
+        if (clientIp) updateDoc.$addToSet = { usedIps: clientIp };
+        await licensesCollection.updateOne({ _id: license._id }, updateDoc);
+        return { success: true, license: { ...license, key, hwid: license.hwid || null, bindingMode } };
     }
 
     if (!license.hwid) {
@@ -913,7 +923,7 @@ async function validateAndBindLicense(rawKey, rawHwid, clientIp = null) {
     if (license.hwid !== hwid) {
         return { success: false, message: "License Key đã kích hoạt trên thiết bị khác" };
     }
-    return { success: true, license: { ...license, key, hwid } };
+    return { success: true, license: { ...license, key, hwid, bindingMode } };
 }
 app.post("/verify-license", async (req, res) => {
     try {
@@ -968,6 +978,32 @@ app.post("/api/admin/licenses/create-many", requireAdmin, async (req, res) => {
         const count = Math.max(1, Math.min(100, parseInt(req.body?.count || "1", 10) || 1));
         const days = Math.max(1, Math.min(3650, parseInt(req.body?.days || "30", 10) || 30));
         const maxUses = Math.max(1, Math.min(1000000, parseInt(req.body?.maxUses || "100", 10) || 100));
+        const bindingMode = req.body?.bindingMode === "unlimited" ? "unlimited" : "normal";
+        const customKey = typeof req.body?.customKey === "string" ? req.body.customKey.trim() : "";
+
+        if (customKey) {
+            const normalizedKey = customKey.toUpperCase();
+            const exists = await licensesCollection.findOne({ key: normalizedKey });
+            if (exists) {
+                return res.status(409).json({ success: false, message: `Key ${normalizedKey} đã tồn tại` });
+            }
+
+            const expire = new Date();
+            expire.setDate(expire.getDate() + days);
+            const doc = {
+                key: normalizedKey,
+                hwid: null,
+                status: "active",
+                expire,
+                maxUses,
+                usedCount: 0,
+                createdAt: new Date(),
+                createdBy: "admin-panel",
+                bindingMode
+            };
+            await licensesCollection.insertOne(doc);
+            return res.json({ success: true, count: 1, data: [{ key: normalizedKey, expire, maxUses, status: "active", bindingMode }] });
+        }
 
         const created = [];
         for (let i = 0; i < count; i++) {
@@ -987,9 +1023,10 @@ app.post("/api/admin/licenses/create-many", requireAdmin, async (req, res) => {
                 maxUses,
                 usedCount: 0,
                 createdAt: new Date(),
-                createdBy: "admin-panel"
+                createdBy: "admin-panel",
+                bindingMode
             });
-            created.push({ key, expire, maxUses, status: "active" });
+            created.push({ key, expire, maxUses, status: "active", bindingMode });
         }
         return res.json({ success: true, count: created.length, data: created });
     } catch (err) {
@@ -1598,6 +1635,8 @@ async function sendElCharacterGacha({ hostId, context, runCount, character, useP
         characterId: character.id,
         characterName: character.name,
         slot: characterInsertion.slot,
+        rubyBefore: currentRuby,
+        rubyAfter: rubyAfterPay,
         finalRuby: rubyAfterPay
     };
 }
@@ -1609,7 +1648,7 @@ function getElLicenseRemaining(license, usageCost = 0) {
     return Math.max(0, maxUses - usedCount - usageCost);
 }
 
-async function recordToolUsageLog({ key, hostId, platform, action, userKey, ip, usageCost, remaining, success, message }) {
+async function recordToolUsageLog({ key, hostId, platform, action, userKey, ip, usageCost, remaining, success, message, rubyAmount, rubyBefore, rubyAfter, characterId, characterName, characterLevel, characterMaxLevel }) {
     try {
         if (!toolUsageHistoryCollection) return;
         await toolUsageHistoryCollection.insertOne({
@@ -1621,6 +1660,13 @@ async function recordToolUsageLog({ key, hostId, platform, action, userKey, ip, 
             ip: String(ip || "").trim() || null,
             usageCost: Number(usageCost) || 0,
             remaining: Number.isFinite(Number(remaining)) ? Number(remaining) : null,
+            rubyAmount: Number.isFinite(Number(rubyAmount)) ? Number(rubyAmount) : null,
+            rubyBefore: Number.isFinite(Number(rubyBefore)) ? Number(rubyBefore) : null,
+            rubyAfter: Number.isFinite(Number(rubyAfter)) ? Number(rubyAfter) : null,
+            characterId: String(characterId || "").trim() || null,
+            characterName: String(characterName || "").trim() || null,
+            characterLevel: Number.isFinite(Number(characterLevel)) ? Number(characterLevel) : null,
+            characterMaxLevel: Number.isFinite(Number(characterMaxLevel)) ? Number(characterMaxLevel) : null,
             success: Boolean(success),
             message: typeof message === "string" ? message.slice(0, 200) : null,
             createdAt: new Date()
@@ -1763,6 +1809,9 @@ app.post(
             );
 
             const remaining = getElLicenseRemaining(req.license, usageCost);
+            const rubyBefore = isCharacterFeature ? (sendResult.rubyBefore ?? null) : (sendResult.currentRuby ?? null);
+            const rubyAfter = isCharacterFeature ? (sendResult.rubyAfter ?? null) : (sendResult.totalRuby ?? null);
+            const rubyAmount = isCharacterFeature ? Math.max(0, Number(rubyBefore ?? 0) - Number(rubyAfter ?? 0)) : Number(rubyHack || 0);
             console.log(`[TOOLBOX SUCCESS] action=${action}, hostId=${hostId}, platform=${platform}, licenseKey=${licenseKey}, userKey=${userKey || "(none)"}, ip=${clientIp}, cost=${usageCost}, remaining=${remaining ?? "unlimited"}`);
             await recordToolUsageLog({
                 key: req.license?.key,
@@ -1773,6 +1822,13 @@ app.post(
                 ip: clientIp,
                 usageCost,
                 remaining: remaining ?? undefined,
+                rubyAmount,
+                rubyBefore,
+                rubyAfter,
+                characterId: isCharacterFeature ? sendResult.characterId : null,
+                characterName: isCharacterFeature ? sendResult.characterName : null,
+                characterLevel: isCharacterFeature ? (req.body?.characterLevel ?? null) : null,
+                characterMaxLevel: isCharacterFeature ? (req.body?.characterMaxLevel ?? null) : null,
                 success: true,
                 message: "success"
             });
@@ -1781,8 +1837,10 @@ app.post(
                 responseBody.characterId = sendResult.characterId;
                 responseBody.characterName = sendResult.characterName;
                 responseBody.slot = sendResult.slot;
+                responseBody.rubyUsed = rubyAmount;
             } else {
                 responseBody.totalRuby = sendResult.totalRuby;
+                responseBody.rubyUsed = rubyAmount;
             }
             if (remaining !== undefined) responseBody.remaining = remaining;
             return res.json(responseBody);
@@ -1797,6 +1855,9 @@ app.post(
                 ip: getIP(req),
                 usageCost: 0,
                 remaining: undefined,
+                rubyAmount: Number(req.body?.amount) || null,
+                characterId: typeof req.body?.characterId === "string" ? req.body.characterId.trim() : null,
+                characterName: null,
                 success: false,
                 message: err.isPublic ? err.message : "Không thể xử lý yêu cầu"
             });
@@ -2667,6 +2728,104 @@ app.get("/api/admin/gachthefast/transactions", requireAdmin, async (req, res) =>
  * Yêu cầu: requireAdmin
  * Lấy toàn bộ lịch sử IP của một License Key từ trước đến nay
  */
+app.get("/api/admin/license-detail/:key", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const key = String(req.params.key || "").trim().toUpperCase();
+        if (!key) return res.status(400).json({ success: false, message: "Missing key" });
+
+        const license = await licensesCollection.findOne({ key });
+        if (!license) return res.status(404).json({ success: false, message: "Không tìm thấy License Key" });
+
+        const cardHistory = await cardTransactionsCollection.find({
+            $or: [
+                { createdKey: key },
+                { targetKey: key }
+            ]
+        }).sort({ createdAt: -1 }).toArray();
+
+        const usageHistory = await toolUsageHistoryCollection.find({ key }).sort({ createdAt: -1 }).limit(200).toArray();
+
+        const ipSet = new Set();
+        [license.ip, license.lastIp, license.purchaseIp, license.bindIp, license.lastUsedIp].forEach(ip => ip && ipSet.add(ip));
+        if (Array.isArray(license.usedIps)) license.usedIps.forEach(ip => ip && ipSet.add(ip));
+        cardHistory.forEach(tx => tx.clientIp && ipSet.add(tx.clientIp));
+        usageHistory.forEach(item => item.ip && ipSet.add(item.ip));
+
+        const timeline = [];
+        cardHistory.forEach(tx => {
+            timeline.push({
+                type: tx.createdKey === key ? "Tạo key mới từ nạp thẻ" : "Nạp thêm lượt vào key",
+                ip: tx.clientIp || "Chưa xác định",
+                time: tx.createdAt,
+                details: `${tx.telco || "Thẻ"} ${Number(tx.declared_value || tx.value || 0).toLocaleString("vi-VN")}đ - Mã đơn: ${tx.request_id}`
+            });
+        });
+
+        usageHistory.forEach(item => {
+            const rubyText = item.rubyAmount != null ? `Ruby: ${item.rubyAmount}` : "";
+            const characterText = item.characterName ? `Nhân vật: ${item.characterName}${item.characterId ? ` (${item.characterId})` : ""}` : "";
+            const rubyLine = rubyText || characterText ? ` | ${[rubyText, characterText].filter(Boolean).join(" | ")}` : "";
+            timeline.push({
+                type: item.success ? `Sử dụng ${item.action || "tool"}` : `Lỗi ${item.action || "tool"}`,
+                ip: item.ip || "Chưa xác định",
+                time: item.createdAt,
+                details: `Host: ${item.hostId || "-"} | Platform: ${item.platform || "-"} | UserKey: ${item.userKey || "-"}${rubyLine}${item.message ? ` | ${item.message}` : ""}`
+            });
+        });
+
+        if (license.firstLogin && license.hwid) {
+            timeline.push({
+                type: "Kích hoạt thiết bị (Bind HWID)",
+                ip: license.bindIp || license.ip || "Chưa xác định",
+                time: license.firstLogin,
+                details: `HWID: ${license.hwid}`
+            });
+        }
+
+        if (license.lastLogin) {
+            timeline.push({
+                type: "Sử dụng / Kiểm tra gần nhất",
+                ip: license.lastIp || license.ip || "Chưa xác định",
+                time: license.lastLogin,
+                details: `Đã dùng ${license.usedCount || 0} / ${license.maxUses || '∞'} lượt`
+            });
+        }
+
+        timeline.sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0));
+
+        return res.json({
+            success: true,
+            key,
+            license: {
+                ...license,
+                expire: license.expire ? new Date(license.expire).toISOString() : null,
+                createdAt: license.createdAt ? new Date(license.createdAt).toISOString() : null,
+                lastLogin: license.lastLogin ? new Date(license.lastLogin).toISOString() : null,
+                firstLogin: license.firstLogin ? new Date(license.firstLogin).toISOString() : null,
+                hwid: license.hwid || null,
+                bindingMode: license.bindingMode || "normal"
+            },
+            allIps: Array.from(ipSet),
+            currentIp: license.lastIp || license.ip || license.purchaseIp || (cardHistory[0]?.clientIp) || null,
+            hwid: license.hwid || null,
+            status: license.status,
+            summary: {
+                totalUniqueIps: ipSet.size,
+                totalToolEvents: usageHistory.length,
+                totalRubyUsed: usageHistory.reduce((sum, item) => sum + (Number(item.rubyAmount) || 0), 0),
+                lastActivityAt: usageHistory[0]?.createdAt || license.lastUsedAt || license.lastLogin || null
+            },
+            recentUsage: usageHistory.slice(0, 30),
+            timeline
+        });
+
+    } catch (err) {
+        console.error("license-detail error:", err.message);
+        return res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+    }
+});
+
 app.get("/api/admin/license-ip-history/:key", requireAdmin, async (req, res) => {
     try {
         await waitForDB();
@@ -2676,7 +2835,6 @@ app.get("/api/admin/license-ip-history/:key", requireAdmin, async (req, res) => 
         const license = await licensesCollection.findOne({ key });
         if (!license) return res.status(404).json({ success: false, message: "Không tìm thấy License Key" });
 
-        // Tìm tất cả các lần nạp thẻ liên quan đến key này trong lịch sử
         const cardHistory = await cardTransactionsCollection.find({
             $or: [
                 { createdKey: key },
@@ -2684,7 +2842,6 @@ app.get("/api/admin/license-ip-history/:key", requireAdmin, async (req, res) => 
             ]
         }).sort({ createdAt: -1 }).toArray();
 
-        // Thu thập toàn bộ danh sách IP duy nhất từ trước đến nay
         const ipSet = new Set();
         if (license.ip) ipSet.add(license.ip);
         if (license.lastIp) ipSet.add(license.lastIp);
@@ -2694,12 +2851,10 @@ app.get("/api/admin/license-ip-history/:key", requireAdmin, async (req, res) => 
             license.usedIps.forEach(ip => ip && ipSet.add(ip));
         }
 
-        // Thêm các IP từ lịch sử nạp thẻ cào
         cardHistory.forEach(tx => {
             if (tx.clientIp) ipSet.add(tx.clientIp);
         });
 
-        // Tạo mảng dòng thời gian chi tiết
         const timeline = [];
 
         cardHistory.forEach(tx => {
