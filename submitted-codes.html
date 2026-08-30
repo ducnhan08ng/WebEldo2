@@ -54,6 +54,7 @@
         <th>Account</th>
         <th>Platform</th>
         <th>Action</th>
+        <th>User Key</th>
         <th>IP</th>
         <th>Cost</th>
         <th>Remaining</th>
@@ -61,7 +62,7 @@
       </tr>
     </thead>
     <tbody id="toolHistoryBody">
-      <tr><td colspan="9">Chưa tải lịch sử</td></tr>
+      <tr><td colspan="10">Chưa tải lịch sử</td></tr>
     </tbody>
   </table>
 </div>
@@ -228,12 +229,14 @@ async function loadToolHistory() {
     data.data.forEach(item => {
       const row = document.createElement('tr');
       const date = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
+      const userKeyText = item.userKey || '—';
       row.innerHTML = `
         <td>${date}</td>
         <td>${item.key || '—'}</td>
         <td>${item.hostId || '—'}</td>
         <td>${item.platform || '—'}</td>
         <td>${item.action || '—'}</td>
+        <td title="${userKeyText}">${userKeyText}</td>
         <td>${item.ip || '—'}</td>
         <td>${item.usageCost ?? 0}</td>
         <td>${item.remaining ?? '∞'}</td>
