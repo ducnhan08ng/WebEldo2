@@ -12,16 +12,17 @@ const PRICE_DATA = {
     elDorado: [
         { name: "Key Tool Box El 5 Lần (Dùng Để Gửi Ruby và 7s)",       price: "50.000₫",     icon: "fa-solid fa-ticket",          color: "#f59e0b" },
         { name: "Key Tool Box El 10 Lần (Dùng Để Gửi Ruby và 7s)",      price: "100.000₫",    icon: "fa-solid fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 30 Lần (Dùng Để Gửi Ruby và 7s)",      price: "200.000₫",    icon: "fa-solid fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 50 Lần (Dùng Để Gửi Ruby và 7s)",      price: "300.000₫",    icon: "fa-solid fa-ticket",          color: "#f59e0b" },
+        { name: "El Dorado Web Player ( AMO/LG/ATV/SSVN",      price: "699.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
+        { name: "El Dorado Manager 2026",      price: "200.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
         { name: "Mây x500",                    price: "50.000₫",     icon: "fa-solid fa-cloud",           color: "#fbbf24" },
         { name: "Mây x1200",                    price: "100.000₫",    icon: "fa-solid fa-cloud",            color: "#fbbf24" },
-        { name: "Ruby x4.000",                 price: "50.000₫",     icon: "fa-solid fa-gem",          color: "#fbbf24" },
-        { name: "Ruby x10.000",                price: "100.000₫",    icon: "fa-solid fa-gem",          color: "#fbbf24" },
+        { name: "Ruby x10.000",                 price: "50.000₫",     icon: "fa-solid fa-gem",          color: "#fbbf24" },
+        { name: "Ruby x22.000",                price: "100.000₫",    icon: "fa-solid fa-gem",          color: "#fbbf24" },
+        { name: "Ruby x50.000",                price: "200.000₫",    icon: "fa-solid fa-gem",          color: "#fbbf24" },
         { name: "x1 Item A",                   price: "50.000₫",     icon: "fa-solid fa-hammer",          color: "#fde68a" },
         { name: "x3 Item A",                   price: "120.000₫",    icon: "fa-solid fa-hammer",          color: "#fde68a" },
         { name: "x1 Random 7s Level 100",      price: "20.000₫",     icon: "fa-solid fa-user",          color: "#60a5fa" },
-        { name: "x3 Random 7s Level 100",      price: "60.000₫",     icon: "fa-solid fa-users",          color: "#a78bfa" },
+        { name: "x3 Random 7s Level 100",      price: "50.000₫",     icon: "fa-solid fa-users",          color: "#a78bfa" },
         { name: "x2 Random 8s Level 90",       price: "50.000₫",     icon: "fa-solid fa-user-plus",          color: "#f472b6" },
         { name: "x5 Random 8s Level 90",       price: "120.000₫",    icon: "fa-solid fa-user-plus",          color: "#f472b6" },
         { name: "x1 Tự Chọn 7s Level 100",     price: "50.000₫",     icon: "fa-solid fa-user",          color: "#10b981" },
@@ -30,8 +31,8 @@ const PRICE_DATA = {
         { name: "x3 Tự Chọn 8s Level 90",      price: "200.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
     ],
     gtd: [
-        { name: "x50.000 Vỏ Sò",       price: "50.000₫",      icon: "fa-bolt",          color: "#3b82f6" },
-        { name: "x120.000 Vỏ Sò",      price: "100.000₫",     icon: "fa-bolt",          color: "#3b82f6" },
+        { name: "GTD Web Player ( AMO/ATV/LG/SSVN )",       price: "1.199.000₫",      icon: "fa-bolt",          color: "#3b82f6" },
+        { name: "x100.000 Vỏ Sò",      price: "100.000₫",     icon: "fa-bolt",          color: "#3b82f6" },
         { name: "x1.000 Magic",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
         { name: "x10.000 Ruby",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
         { name: "100.000 Diamond",     price: "100.000₫",     icon: "fa-bolt",           color: "#2563eb" },
@@ -41,6 +42,156 @@ const PRICE_DATA = {
 
 let elDoradoPage = 1;
 let gtdPage = 1;
+
+// ================= NHÁNH MÔ TẢ SẢN PHẨM ===============
+const ELDO_PRODUCT_BRANCH = {
+    webPlayer: {
+        name: "ElDo Web Player",
+        icon: "fa-solid fa-display",
+        color: "#38bdf8",
+        description: "Cổng web chạy/hiển thị game El Dorado trực tiếp, giúp người dùng thao tác nhanh hơn trên trình duyệt."
+    },
+    manager: {
+        name: "Manager",
+        icon: "fa-solid fa-gear",
+        color: "#a78bfa",
+        description: "Bộ quản lý key, lượt dùng, lịch sử log, và theo dõi trạng thái tài khoản/tool cho admin."
+    }
+};
+
+const PRODUCT_CATALOG = [
+    {
+        id: "web-player",
+        name: "El Dorado Web Player",
+        price: "Từ 699.000đ",
+        icon: "fa-solid fa-display",
+        color: "#38bdf8",
+        summary: "Bản Log Acc El Dorado Hỗ Trợ 4 Server AMO/ATV/LG/SSVN, truy cập nhanh trên trình duyệt.",
+        description: "Bản log web cực vip tin dùng bởi các hacker của game, dùng mượt mà, có thể chỉnh game tùy ý, log mọi account!",
+        features: [
+            "Hỗ Trợ Trọn Đời",
+            "Giao diện đơn giản và dễ dùng",
+            "Tối ưu trải nghiệm game và thao tác",
+            "Trải nghiệm mod/hacks miễn phí"
+        ],
+        discordUrl: "https://discord.com/users/chosenone_3667",
+        facebookUrl: "https://www.facebook.com/minh.hung.63491"
+    },
+    {
+        id: "web-player",
+        name: "Gold Tower Defence Web Player",
+        price: "Từ 1.199.000đ",
+        icon: "fa-solid fa-display",
+        color: "#38bdf8",
+        summary: "Bản Log Acc GTD Hỗ Trợ 4 Server AMO/ATV/LG/SSVN, truy cập nhanh trên trình duyệt.",
+        description: "ElDo Web Player là giải pháp truy cập game trên nền web, tối ưu cho người dùng muốn mở ngay mà không cần cấu hình phức tạp. Hỗ trợ thao tác nhanh, tối ưu hiển thị và tương thích tốt với các nền tảng phổ biến.",
+        features: [
+            "Hỗ Trợ Trọn Đời",
+            "Giao diện đơn giản và dễ dùng",
+            "Tối ưu trải nghiệm game và thao tác",
+            "Trải nghiệm mod/hacks miễn phí"
+        ],
+        discordUrl: "https://discord.com/users/chosenone_3667",
+        facebookUrl: "https://www.facebook.com/minh.hung.63491"
+    },
+    {
+        id: "manager",
+        name: "El Dorado Manager 2026",
+        price: "Từ 200.000đ",
+        icon: "fa-solid fa-gear",
+        color: "#a78bfa",
+        summary: "Bản Mod/Hack Cho ElDorado M, Trải Nghiệm Full Cập Nhật Mới Nhất!",
+        description: "Mod/Hack Vô Hạn Ruby, Mây, Full Thần Nạp, Nâng Cấp Level 160, Full 9 Sao và 8 Sao, Anti Ban 100%, Hỗ Trợ PVP, Boss, CloudGarden",
+        features: [
+            "Hỗ Trợ Trọn Đời Đến Khi Game Sập",
+            "Cập nhật tính năng mới liên tục",
+            "Trải Nghiệm Tinh Hoa Của Game",
+            "Hỗ Trợ PVP, Boss, CloudGarden"
+        ],
+        discordUrl: "https://discord.com/users/chosenone_3667",
+        facebookUrl: "https://www.facebook.com/minh.hung.63491"
+    },
+    {
+        id: "toolbox",
+        name: "Toolbox El Dorado",
+        price: "Từ 20.000đ / lượt",
+        icon: "fa-solid fa-bolt",
+        color: "#f59e0b",
+        summary: "Công cụ gửi Ruby, 7s, quản lý tài khoản nhanh và an toàn trên web.",
+        description: "Toolbox El Dorado hỗ trợ người dùng thực hiện các tác vụ nhanh như gửi Ruby, gửi 7s và xử lý bằng license key. Dễ sử dụng và phù hợp với cả người mới lẫn người dùng có kinh nghiệm.",
+        features: [
+            "Gửi Ruby nhanh và tự động",
+            "Tiện Lợi và An Toàn",
+            "Dùng qua license key và tracking rõ ràng",
+            "Phù hợp cho user và admin"
+        ],
+        discordUrl: "https://discord.com/users/chosenone_3667",
+        facebookUrl: "https://www.facebook.com/minh.hung.63491"
+    }
+];
+
+function renderProductCards() {
+    const container = document.getElementById("productList");
+    if (!container) return;
+
+    container.innerHTML = PRODUCT_CATALOG.map(product => `
+        <div class="product-card">
+            <div class="product-card-top">
+                <div class="product-card-icon" style="background:${product.color};">
+                    <i class="${product.icon}"></i>
+                </div>
+                <div class="product-card-meta">
+                    <div class="product-card-name">${product.name}</div>
+                    <div class="product-card-price">${product.price}</div>
+                </div>
+            </div>
+            <div class="product-card-summary">${product.summary}</div>
+            <div class="product-card-actions">
+                <button class="product-detail-btn" type="button" onclick="openProductDetail('${product.id}')">Xem chi tiết</button>
+                <a class="product-btn" href="${product.discordUrl}" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-brands fa-discord"></i> Mua Discord
+                </a>
+            </div>
+        </div>
+    `).join("");
+}
+
+function openProductDetail(productId) {
+    const product = PRODUCT_CATALOG.find(item => item.id === productId);
+    const modal = document.getElementById("productDetailModal");
+    const header = document.getElementById("productDetailHeader");
+    const body = document.getElementById("productDetailBody");
+    const discordBtn = document.getElementById("productDiscordBtn");
+    const facebookBtn = document.getElementById("productFacebookBtn");
+
+    if (!product || !modal || !header || !body || !discordBtn || !facebookBtn) return;
+
+    header.innerHTML = `
+        <div class="product-detail-icon" style="background:${product.color};">
+            <i class="${product.icon}"></i>
+        </div>
+        <div>
+            <div class="product-detail-name">${product.name}</div>
+            <div class="product-detail-price">${product.price}</div>
+        </div>
+    `;
+
+    body.innerHTML = `
+        <p>${product.description}</p>
+        <ul>
+            ${product.features.map(feature => `<li>${feature}</li>`).join("")}
+        </ul>
+    `;
+
+    discordBtn.href = product.discordUrl;
+    facebookBtn.href = product.facebookUrl;
+    modal.style.display = "flex";
+}
+
+function closeProductDetail() {
+    const modal = document.getElementById("productDetailModal");
+    if (modal) modal.style.display = "none";
+}
 
 // ================= RENDER BẢNG GIÁ CÓ PHÂN TRANG (dạng card) =================
 function renderPriceGrid(data, page, gridId, paginationId, type) {
@@ -257,22 +408,52 @@ function submitCode() {
 function openPrice() {
     elDoradoPage = 1;
     renderPriceGrid(PRICE_DATA.elDorado, elDoradoPage, 'priceGrid', 'pricePagination', 'elDorado');
-    document.getElementById("priceModal").style.display = "flex";
+    const modal = document.getElementById("priceModal");
+    if (modal) {
+        modal.style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+    }
 }
-function closePrice() { document.getElementById("priceModal").style.display = "none"; }
+function closePrice() {
+    const modal = document.getElementById("priceModal");
+    if (modal) {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+    }
+}
 
 function openGTDPrice() {
     gtdPage = 1;
     renderPriceGrid(PRICE_DATA.gtd, gtdPage, 'gtdPriceGrid', 'gtdPricePagination', 'gtd');
-    document.getElementById("gtdPriceModal").style.display = "flex";
+    const modal = document.getElementById("gtdPriceModal");
+    if (modal) {
+        modal.style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+    }
 }
-function closeGTDPrice() { document.getElementById("gtdPriceModal").style.display = "none"; }
+function closeGTDPrice() {
+    const modal = document.getElementById("gtdPriceModal");
+    if (modal) {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+    }
+}
 
 function openShop() {
-    document.getElementById("shopModal").style.display = "flex";
+    const modal = document.getElementById("shopModal");
+    if (modal) {
+        modal.style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+    }
     loadShop();
 }
-function closeShop() { document.getElementById("shopModal").style.display = "none"; }
+function closeShop() {
+    const modal = document.getElementById("shopModal");
+    if (modal) {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+    }
+}
 
 // ================= TOOLBOX EL DORADO =================
 const EL_DORADO_HWID_KEY = "elDoradoToolboxHwid";
@@ -294,11 +475,19 @@ function openElDoradoToolbox() {
     setElDoradoStatus("");
     updateElDoradoToolboxMode();
     resetToolboxSteps();
-    document.getElementById("elDoradoToolboxModal").style.display = "flex";
+    const modal = document.getElementById("elDoradoToolboxModal");
+    if (modal) {
+        modal.style.display = "flex";
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+    }
 }
 
 function closeElDoradoToolbox() {
-    document.getElementById("elDoradoToolboxModal").style.display = "none";
+    const modal = document.getElementById("elDoradoToolboxModal");
+    if (modal) {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+    }
 }
 
 function setElDoradoStatus(message, type = "") {
@@ -409,23 +598,18 @@ async function runElDoradoToolbox(payload) {
         try {
             data = await response.json();
         } catch {
-            if (!response.ok) {
-                throw new Error("Server trả về dữ liệu không hợp lệ");
-            }
-            return { success: true, remaining: 9, characterName: payload.characterId ? "Demo Character" : "" };
+            throw new Error(response.ok ? "Server trả về dữ liệu không hợp lệ" : "Không thể kết nối tới server");
         }
 
         if (!response.ok || !data.success) {
-            throw new Error(data.message || "Server xử lý thất bại");
+            throw new Error(data?.message || "Server xử lý thất bại");
         }
+
         return data;
     } catch (err) {
         return {
-            success: true,
-            remaining: 9,
-            message: "Chế độ demo: dữ liệu được xử lý local trên trình duyệt.",
-            characterName: payload.characterId ? "Demo Character" : "",
-            characterId: payload.characterId || 0
+            success: false,
+            message: err?.message || "Không thể xử lý yêu cầu từ server"
         };
     }
 }
@@ -499,6 +683,10 @@ async function submitElDoradoToolbox(event) {
         setToolboxStep(3, "active");
 
         const result = await runElDoradoToolbox(payload);
+
+        if (!result?.success) {
+            throw new Error(result?.message || "Server xử lý thất bại");
+        }
 
         setToolboxStep(3, "done");
         setToolboxStep(4, "done");
@@ -586,6 +774,89 @@ function buyAcc() {
 
 // ================= POPUP THÔNG BÁO =================
 const POPUP_KEY = "popup_hidden_until";
+const NOTIFICATION_ITEMS = [
+    {
+        id: 1,
+        title: "Cập nhật Web El Dorado",
+        releaseDate: "2026-08-30 11:16 AM",
+        content: "Web Lần Đầu Chạy, Trải Nghiệm Miễn Phí Tại Web Nhé =)). List License Key 5 Lượt Dùng: "
+    },
+    {
+        id: 2,
+        title: "Tuyển Cộng Tác Viên El Dorado/ Gold Tower Defence",
+        releaseDate: "2026-08-29 2:30 PM",
+        content: "Bạn nào hack được GTD/El thì có thể liên hệ mình để hợp tác bán những vật phẩm trong shop nhé! Kênh của ad tương tác cực kì cao, phù hợp cho anh em hacker ế khách. Liên hệ tại https://www.facebook.com/minh.hung.63491"
+    },
+    {
+        id: 3,
+        title: "Fix Toolbox & Admin",
+        releaseDate: "2026-08-10",
+        content: "first release"
+    }
+];
+
+function renderNotificationList() {
+    const panel = document.getElementById("notificationList");
+    const badge = document.getElementById("notificationBadge");
+    if (!panel || !badge) return;
+
+    const sorted = [...NOTIFICATION_ITEMS].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+    panel.innerHTML = sorted.map(item => `
+        <button class="notification-item" type="button" onclick="openNotificationDetail(${item.id})">
+            <div class="notification-item-title">${item.title}</div>
+            <div class="notification-item-meta">
+                <span>Release</span>
+                <span>${formatNotificationDate(item.releaseDate)}</span>
+            </div>
+            <div class="notification-item-body">${(item.content || "").slice(0, 110)}${(item.content || "").length > 110 ? "..." : ""}</div>
+        </button>
+    
+    `).join("");
+
+    badge.textContent = sorted.length;
+    const meta = document.getElementById("notificationMeta");
+    const textCount = document.getElementById("notificationTextCount");
+    if (meta) meta.innerHTML = `Bạn có <strong>${sorted.length}</strong> thông báo mới`;
+    if (textCount) textCount.textContent = sorted.length;
+}
+
+function formatNotificationDate(dateString) {
+    if (!dateString) return "—";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return dateString;
+    return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+function toggleNotificationPanel(forceOpen) {
+    const panel = document.getElementById("notificationPanel");
+    if (!panel) return;
+    const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.style.display === "none";
+    panel.style.display = shouldOpen ? "block" : "none";
+}
+
+function openNotificationDetail(id) {
+    const item = NOTIFICATION_ITEMS.find(entry => entry.id === Number(id));
+    const modal = document.getElementById("notificationDetailModal");
+    const title = document.getElementById("notificationDetailTitle");
+    const date = document.getElementById("notificationDetailDate");
+    const body = document.getElementById("notificationDetailBody");
+    if (!item || !modal || !title || !date || !body) return;
+
+    title.textContent = item.title;
+    date.textContent = `Release: ${formatNotificationDate(item.releaseDate)}`;
+    body.textContent = item.content || "Không có nội dung thông báo.";
+    modal.style.display = "flex";
+    requestAnimationFrame(() => modal.classList.add("is-open"));
+    toggleNotificationPanel(false);
+}
+
+function closeNotificationDetail() {
+    const modal = document.getElementById("notificationDetailModal");
+    if (modal) {
+        modal.classList.remove("is-open");
+        modal.style.display = "none";
+    }
+}
 
 function closePopup() {
     document.getElementById("updatePopup").style.display = "none";
@@ -601,6 +872,29 @@ function hideFor2Hours() {
 // ================= INIT =================
 document.addEventListener("DOMContentLoaded", function() {
     setupPlatformListener();
+    renderProductCards();
+    renderNotificationList();
+
+    document.getElementById("notificationBellBtn")?.addEventListener("click", function() {
+        const panel = document.getElementById("notificationPanel");
+        if (!panel) return;
+        const show = panel.style.display === "none";
+        panel.style.display = show ? "block" : "none";
+        if (show) {
+            requestAnimationFrame(() => panel.classList.add("is-open"));
+        } else {
+            panel.classList.remove("is-open");
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        const bell = document.getElementById("notificationBellBtn");
+        const panel = document.getElementById("notificationPanel");
+        if (!bell || !panel) return;
+        if (!bell.contains(event.target) && !panel.contains(event.target)) {
+            panel.style.display = "none";
+        }
+    });
 
     const hiddenUntil = localStorage.getItem(POPUP_KEY);
     const now = Date.now();
@@ -630,6 +924,7 @@ function openBuyKeyModal() {
     const modal = document.getElementById("buyKeyModal");
     if (!modal) return;
     modal.style.display = "flex";
+    requestAnimationFrame(() => modal.classList.add("is-open"));
     resetBuyKeyForm();
     if (typeof updateSavedKeysBadge === "function") {
         updateSavedKeysBadge();
@@ -639,6 +934,7 @@ function openBuyKeyModal() {
 function closeBuyKeyModal() {
     const modal = document.getElementById("buyKeyModal");
     if (!modal) return;
+    modal.classList.remove("is-open");
     modal.style.display = "none";
     stopBuyKeyPolling();
 }
@@ -647,6 +943,10 @@ window.addEventListener("click", function(event) {
     const buyKeyModal = document.getElementById("buyKeyModal");
     if (buyKeyModal && event.target === buyKeyModal) {
         closeBuyKeyModal();
+    }
+    const notificationModal = document.getElementById("notificationDetailModal");
+    if (notificationModal && event.target === notificationModal) {
+        closeNotificationDetail();
     }
 });
 
