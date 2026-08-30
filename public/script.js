@@ -78,7 +78,7 @@ const PRODUCT_CATALOG = [
         facebookUrl: "https://www.facebook.com/minh.hung.63491"
     },
     {
-        id: "web-player",
+        id: "web-player-2",
         name: "Gold Tower Defence Web Player",
         price: "Từ 1.199.000đ",
         icon: "fa-solid fa-display",
