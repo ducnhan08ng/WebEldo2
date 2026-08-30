@@ -19,7 +19,7 @@
 <div class="container">
     <div class="logo-section">
         <div class="logo-badge">
-            <i class="fa-solid fa-gem"></i>
+            
             <span>Minh Hùng</span>
         </div>
         <h1>Web ElDorado ToolBox Bởi Minh Hùng</h1>
@@ -77,7 +77,7 @@ Số Trận PVP Đã Chơi<br>
 
     <button onclick="submitCode()" class="btn-primary submit-btn">
         <i class="fa-solid fa-paper-plane"></i>
-        <span>Gửi mã</span>
+        <span>Hiện Chưa Có Event Free Ruby</span>
     </button>
     <div id="submitStatus" class="submit-status"></div>
 </div>
@@ -101,12 +101,68 @@ Số Trận PVP Đã Chơi<br>
 
     <!-- Social -->
     <div class="social-buttons">
-        <a class="social-btn youtube" href="https://www.youtube.com/@minhhung3667" target="_blank">
+        <a class="social-btn youtube" href="https://www.youtube.com/@minhhung3667" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-youtube"></i> YouTube
         </a>
-        <a class="social-btn" href="https://discord.com/users/chosenone_3667" target="_blank">
+        <a class="social-btn" href="https://discord.com/users/chosenone_3667" target="_blank" rel="noopener noreferrer">
             <i class="fa-brands fa-discord"></i> Discord
         </a>
+        <a class="social-btn facebook" href="https://www.facebook.com/minh.hung.63491" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-facebook-f"></i> Facebook
+        </a>
+    </div>
+
+    <section class="product-showcase">
+        <div class="product-showcase-header">
+            <h3><i class="fa-solid fa-box-open"></i> Sản phẩm nổi bật</h3>
+        </div>
+        <div id="productList" class="product-list"></div>
+    </section>
+</div>
+
+<div id="productDetailModal" class="modal product-detail-modal">
+    <div class="modal-content product-detail-content">
+        <span class="close" onclick="closeProductDetail()">&times;</span>
+        <div class="product-detail-header" id="productDetailHeader"></div>
+        <div class="product-detail-body" id="productDetailBody"></div>
+        <div class="product-detail-actions">
+            <a id="productDiscordBtn" class="product-action-btn discord" href="#" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-discord"></i> Mua qua Discord
+            </a>
+            <a id="productFacebookBtn" class="product-action-btn facebook" href="#" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-facebook-f"></i> Mua qua Facebook
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="notification-widget">
+    <button id="notificationBellBtn" class="notification-bell" type="button" aria-label="Thông báo">
+        <i class="fa-solid fa-bullhorn"></i>
+        <span id="notificationBadge" class="notification-badge">0</span>
+    </button>
+    <div id="notificationMeta" class="notification-meta">Bạn có <strong>0</strong> thông báo mới</div>
+
+    <div id="notificationPanel" class="notification-panel" style="display: none;">
+        <div class="notification-panel-header">
+            <span><i class="fa-solid fa-circle-info"></i> Bạn có <strong id="notificationTextCount">0</strong> thông báo mới</span>
+            <button type="button" class="notification-close" onclick="toggleNotificationPanel(false)">×</button>
+        </div>
+        <div id="notificationList" class="notification-list"></div>
+    </div>
+</div>
+
+<div id="notificationDetailModal" class="modal notification-detail-modal">
+    <div class="modal-content notification-detail-content">
+        <span class="close" onclick="closeNotificationDetail()">&times;</span>
+        <div class="notification-detail-head">
+            <div class="notification-detail-icon"><i class="fa-solid fa-bullhorn"></i></div>
+            <div>
+                <div id="notificationDetailTitle" class="notification-detail-title">Thông báo</div>
+                <div id="notificationDetailDate" class="notification-detail-date">—</div>
+            </div>
+        </div>
+        <div id="notificationDetailBody" class="notification-detail-body"></div>
     </div>
 </div>
 
