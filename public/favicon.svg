@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="El Dorado favicon">
+  <defs>
+    <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#f97316"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="24" fill="#0f172a"/>
+  <path d="M64 16L101 112H83L76 93H52L45 112H27L64 16zm-9 49h18L73 75H55L55 65z" fill="url(#g)"/>
+  <circle cx="100" cy="38" r="10" fill="#60a5fa"/>
+</svg>
