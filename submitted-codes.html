@@ -1,70 +1,127 @@
 <!-- Bảng điều khiển Quản lý Toolbox Admin -->
-<div style="margin: 20px; padding: 20px; border: 1px solid #ccc; background: #f9f9f9; font-family: sans-serif; max-width: 1300px;">
-  <h2>Quản Lý License Key Toolbox</h2>
-
-  <div style="margin-bottom: 15px;">
-    <label><b>Admin Key:</b> <input type="password" id="adminKeyInput" placeholder="Nhập ADMIN_KEY trong .env" style="width: 280px;"></label>
-  </div>
-
-  <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; align-items: end;">
-    <div>
-      <label>Số lượng key:<br><input type="number" id="countInput" value="1" min="1" max="100" style="width: 90px;"></label>
+<div style="margin: 20px auto; padding: 0; max-width: 1320px; font-family: 'Segoe UI', sans-serif; color: #e2e8f0;">
+  <div style="background: linear-gradient(135deg, #0f172a, #111827 40%, #0b1120); border: 1px solid rgba(148,163,184,0.2); border-radius: 18px; box-shadow: 0 20px 50px rgba(15, 23, 42, 0.55); overflow: hidden;">
+    <div style="padding: 22px 24px; border-bottom: 1px solid rgba(148,163,184,0.15); background: rgba(15,23,42,0.75);">
+      <div style="display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <div>
+          <div style="font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase; color: #fbbf24; font-weight: 700;">Admin Panel</div>
+          <h2 style="margin: 8px 0 0; font-size: 30px; color: #f8fafc;">Quản lý License Key Toolbox</h2>
+        </div>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button onclick="loadLicenses()" style="padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(96,165,250,0.3); background: rgba(59,130,246,0.12); color: #dbeafe; cursor: pointer; font-weight: 600;">Tải key</button>
+          <button onclick="loadToolHistory()" style="padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(168,85,247,0.3); background: rgba(168,85,247,0.12); color: #e9d5ff; cursor: pointer; font-weight: 600;">Lịch sử</button>
+        </div>
+      </div>
     </div>
-    <div>
-      <label>Ngày HSD:<br><input type="number" id="daysInput" value="30" min="1" style="width: 90px;"></label>
+
+    <div style="padding: 22px 24px 8px;">
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 18px;">
+        <div style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 18px;">
+          <label style="display: block; margin-bottom: 10px; color: #cbd5e1; font-size: 13px; font-weight: 600;">Admin Key</label>
+          <input type="password" id="adminKeyInput" placeholder="Nhập ADMIN_KEY trong .env" style="width: 100%; padding: 11px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white; font-size: 14px; outline: none;">
+        </div>
+        <div id="licenseResult" style="background: rgba(22, 163, 74, 0.1); border: 1px solid rgba(34,197,94,0.3); color: #86efac; min-height: 72px; border-radius: 14px; padding: 16px 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; text-align: center;">Sẵn sàng</div>
+      </div>
+
+      <div style="margin-top: 18px; background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 18px;">
+        <div style="margin-bottom: 14px; font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: #94a3b8; font-weight: 700;">Tạo key</div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;">
+          <div>
+            <label style="display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600;">Số lượng</label>
+            <input type="number" id="countInput" value="1" min="1" max="100" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600;">Ngày HSD</label>
+            <input type="number" id="daysInput" value="30" min="1" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600;">Số lượt / key</label>
+            <input type="number" id="usesInput" value="100" min="1" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+          </div>
+          <div>
+            <label style="display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600;">Chế độ khóa</label>
+            <select id="bindingModeInput" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+              <option value="normal">Normal (giới hạn HWID/IP)</option>
+              <option value="unlimited">Unlimited (không giới hạn)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; align-items: end;">
+          <div>
+            <label style="display: block; margin-bottom: 6px; color: #cbd5e1; font-size: 12px; font-weight: 600;">Key tùy ý</label>
+            <input type="text" id="customKeyInput" placeholder="Ví dụ: ELDO-001" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+          </div>
+          <button onclick="createLicenseBatch(false)" style="padding: 11px 14px; border: none; border-radius: 10px; background: linear-gradient(90deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700;">Tạo key</button>
+          <button onclick="createLicenseBatch(true)" style="padding: 11px 14px; border: 1px solid rgba(96,165,250,0.3); border-radius: 10px; background: rgba(59,130,246,0.12); color: #dbeafe; cursor: pointer; font-weight: 700;">Tạo ngẫu nhiên</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 18px; background: rgba(15,23,42,0.65); border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+          <h3 style="margin: 0; color: #f8fafc; font-size: 18px;">Danh sách key</h3>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <input type="text" id="deleteKeyInput" placeholder="Nhập key cần xóa" style="width: 240px; padding: 9px 10px; border-radius: 10px; border: 1px solid rgba(148,163,184,0.2); background: rgba(2,6,23,0.7); color: white;">
+            <button onclick="deleteSelectedKey()" style="padding: 9px 14px; border: none; border-radius: 10px; background: linear-gradient(90deg, #ef4444, #b91c1c); color: white; cursor: pointer; font-weight: 700;">Xóa</button>
+          </div>
+        </div>
+
+        <div style="overflow: auto; border-radius: 12px; border: 1px solid rgba(148,163,184,0.12);">
+          <table style="width: 100%; border-collapse: collapse; min-width: 980px; background: rgba(2,6,23,0.52);">
+            <thead style="background: rgba(30,41,59,0.9);">
+              <tr>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Key</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Lượt Dùng</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Trạng Thái</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Binding</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">HSD</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Ngày Tạo</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="licenseTableBody">
+              <tr><td colspan="7" style="padding: 18px; text-align: center; color: #94a3b8;">Chưa tải dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="keyDetailModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.72); z-index:999; justify-content:center; align-items:center; padding:20px;">
+        <div style="width:min(1100px, 92vw); max-height:90vh; overflow:auto; background:#0f172a; border:1px solid rgba(148,163,184,0.2); border-radius:16px; box-shadow:0 20px 60px rgba(15,23,42,0.7); padding:20px; color:#e2e8f0;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:18px; flex-wrap:wrap;">
+            <h3 id="detailTitle" style="margin:0; color:#f8fafc;">Chi tiết key</h3>
+            <button onclick="closeKeyDetail()" style="padding:8px 12px; border:none; border-radius:10px; background:rgba(239,68,68,0.12); color:#fecaca; cursor:pointer; font-weight:700;">Đóng</button>
+          </div>
+          <div id="keyDetailContent" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;"></div>
+        </div>
+      </div>
+
+      <div style="margin: 18px 0 22px; background: rgba(15,23,42,0.65); border: 1px solid rgba(148,163,184,0.12); border-radius: 14px; padding: 18px;">
+        <h3 style="margin: 0 0 12px; color: #f8fafc; font-size: 18px;">Lịch sử sử dụng tool</h3>
+        <div style="overflow: auto; border-radius: 12px; border: 1px solid rgba(148,163,184,0.12);">
+          <table style="width: 100%; border-collapse: collapse; min-width: 1100px; background: rgba(2,6,23,0.52);">
+            <thead style="background: rgba(30,41,59,0.9);">
+              <tr>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Thời gian</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Key</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Account</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Platform</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Action</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">User Key</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">IP</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Cost</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Remaining</th>
+                <th style="padding: 12px 10px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.12);">Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody id="toolHistoryBody">
+              <tr><td colspan="10" style="padding: 18px; text-align: center; color: #94a3b8;">Chưa tải lịch sử</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-    <div>
-      <label>Số lượt/key:<br><input type="number" id="usesInput" value="100" min="1" style="width: 110px;"></label>
-    </div>
-    <button onclick="createLicenseBatch()" style="padding: 8px 16px; cursor: pointer;">Tạo key mới</button>
-    <button onclick="loadLicenses()" style="padding: 8px 16px; cursor: pointer;">Tải danh sách</button>
-    <button onclick="loadToolHistory()" style="padding: 8px 16px; cursor: pointer;">Xem lịch sử</button>
   </div>
-
-  <div style="margin-bottom: 18px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-    <input type="text" id="deleteKeyInput" placeholder="Nhập key cần xóa" style="width: 260px; padding: 7px 10px;">
-    <button onclick="deleteSelectedKey()" style="padding: 8px 16px; cursor: pointer; background: #dc2626; color: white; border: none;">Xóa key hiện tại</button>
-  </div>
-
-  <div id="licenseResult" style="margin-top: 10px; color: green; font-weight: bold; min-height: 22px;"></div>
-
-  <h3 style="margin-top: 22px;">Danh sách key</h3>
-  <table border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse; text-align: center;">
-     <thead style="background: #ddd;">
-        <tr>
-            <th>Key</th>
-            <th>Lượt Dùng</th>
-            <th>Trạng Thái</th>
-            <th>HSD</th>
-            <th>Ngày Tạo</th>
-            <th>Hành động</th>
-        </tr>
-     </thead>
-     <tbody id="licenseTableBody">
-        <tr><td colspan="6">Chưa tải dữ liệu</td></tr>
-     </tbody>
-  </table>
-
-  <h3 style="margin-top: 28px;">Lịch sử sử dụng tool</h3>
-  <table border="1" style="margin-top: 10px; width: 100%; border-collapse: collapse; text-align: center;">
-    <thead style="background: #e5e7eb;">
-      <tr>
-        <th>Thời gian</th>
-        <th>Key</th>
-        <th>Account</th>
-        <th>Platform</th>
-        <th>Action</th>
-        <th>User Key</th>
-        <th>IP</th>
-        <th>Cost</th>
-        <th>Remaining</th>
-        <th>Trạng thái</th>
-      </tr>
-    </thead>
-    <tbody id="toolHistoryBody">
-      <tr><td colspan="10">Chưa tải lịch sử</td></tr>
-    </tbody>
-  </table>
 </div>
 
 <script>
@@ -95,29 +152,48 @@ async function safeFetchJson(url, options = {}) {
 
 function setResult(message, isError = false) {
   const el = document.getElementById('licenseResult');
+  if (!el) return;
   el.textContent = message;
-  el.style.color = isError ? '#b91c1c' : '#15803d';
+  el.style.color = isError ? '#fca5a5' : '#86efac';
+  el.style.background = isError ? 'rgba(239,68,68,0.12)' : 'rgba(22,163,74,0.12)';
+  el.style.borderColor = isError ? 'rgba(239,68,68,0.35)' : 'rgba(34,197,94,0.35)';
 }
 
-async function createLicenseBatch() {
+async function createLicenseBatch(useRandomMode = false) {
   const adminKey = getAdminKey();
+  const customKey = (document.getElementById('customKeyInput')?.value || '').trim();
+  const bindingMode = document.getElementById('bindingModeInput')?.value || 'normal';
   const count = Number(document.getElementById('countInput').value || 1);
   const days = Number(document.getElementById('daysInput').value || 30);
   const maxUses = Number(document.getElementById('usesInput').value || 100);
 
   if (!adminKey) return alert('Vui lòng nhập Admin Key!');
+
+  const finalCustomKey = useRandomMode ? '' : customKey;
   setResult('Đang tạo key...');
 
   try {
+    const payload = {
+      count: finalCustomKey ? 1 : count,
+      days,
+      maxUses,
+      bindingMode,
+      customKey: finalCustomKey || undefined
+    };
+
     const data = await safeFetchJson('/api/admin/licenses/create-many?key=' + encodeURIComponent(adminKey), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ count, days, maxUses })
+      body: JSON.stringify(payload)
     });
     if (data.success) {
-      setResult(`✅ Đã tạo ${data.count} key mới.`);
       const first = (data.data || [])[0];
-      if (first?.key) deleteKeyInput.value = first.key;
+      const createdKey = first?.key || finalCustomKey || 'key';
+      setResult(finalCustomKey
+        ? `✅ Đã tạo key tùy ý: ${createdKey}`
+        : `✅ Đã tạo ${data.count} key mới.`
+      );
+      if (createdKey) deleteKeyInput.value = createdKey;
       loadLicenses();
       loadToolHistory();
     } else {
@@ -143,24 +219,27 @@ async function loadLicenses() {
     }
 
     if (!data.data.length) {
-      tbody.innerHTML = '<tr><td colspan="6">Không có key nào</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="7" style="padding: 18px; text-align:center; color:#94a3b8;">Không có key nào</td></tr>';
       return;
     }
 
     data.data.forEach(item => {
       const createdDate = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
       const expire = item.expire ? new Date(item.expire).toLocaleString('vi-VN') : '—';
-      const statusColor = item.status === 'active' ? 'green' : '#b91c1c';
+      const statusColor = item.status === 'active' ? 'green' : '#f87171';
+      const bindingLabel = item.bindingMode === 'unlimited' ? 'Unlimited' : 'Normal';
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td style="color: blue; font-weight: bold; cursor: pointer;" onclick="selectKey('${item.key}')">${item.key}</td>
-        <td>${item.usedCount || 0} / ${item.maxUses || '∞'}</td>
-        <td style="color: ${statusColor}; text-transform: capitalize;">${item.status || 'unknown'}</td>
-        <td>${expire}</td>
-        <td>${createdDate}</td>
-        <td>
-          <button type="button" onclick="selectKey('${item.key}')">Chọn</button>
-          <button type="button" style="background:#dc2626;color:white;border:none;margin-left:6px;" onclick="deleteKeyByValue('${item.key}')">Xóa</button>
+        <td style="padding: 12px 10px; text-align: center; color: #60a5fa; font-weight: 700; cursor: pointer;" onclick="viewKeyDetail('${item.key}')">${item.key}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.usedCount || 0} / ${item.maxUses || '∞'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: ${statusColor}; text-transform: capitalize; font-weight: 700;">${item.status || 'unknown'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #fbbf24; font-weight: 600;">${bindingLabel}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${expire}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${createdDate}</td>
+        <td style="padding: 12px 10px; text-align: center;">
+          <button type="button" onclick="viewKeyDetail('${item.key}')" style="padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(96,165,250,0.3); background: rgba(59,130,246,0.12); color: #dbeafe; cursor: pointer;">Chi tiết</button>
+          <button type="button" onclick="selectKey('${item.key}')" style="padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(96,165,250,0.3); background: rgba(59,130,246,0.12); color: #dbeafe; cursor: pointer; margin-left: 4px;">Chọn</button>
+          <button type="button" onclick="deleteKeyByValue('${item.key}')" style="padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(239,68,68,0.35); background: rgba(239,68,68,0.1); color: #fecaca; cursor: pointer; margin-left: 4px;">Xóa</button>
         </td>
       `;
       tbody.appendChild(row);
@@ -173,6 +252,68 @@ async function loadLicenses() {
 function selectKey(key) {
   if (!key) return;
   deleteKeyInput.value = key;
+}
+
+async function viewKeyDetail(key) {
+  const adminKey = getAdminKey();
+  if (!adminKey) return alert('Vui lòng nhập Admin Key!');
+  try {
+    const data = await safeFetchJson('/api/admin/license-detail/' + encodeURIComponent(key) + '?key=' + encodeURIComponent(adminKey));
+    const modal = document.getElementById('keyDetailModal');
+    const content = document.getElementById('keyDetailContent');
+    document.getElementById('detailTitle').textContent = 'Chi tiết key: ' + (data.key || key);
+
+    const summary = data.summary || {};
+    const rows = [
+      ['Key', data.key || key],
+      ['Status', data.status || 'unknown'],
+      ['Binding', data.license?.bindingMode || 'normal'],
+      ['HWID', data.hwid || '—'],
+      ['IP hiện tại', data.currentIp || '—'],
+      ['IPs đã dùng', (data.allIps || []).join(', ') || '—'],
+      ['Lượt đã dùng', `${data.license?.usedCount || 0} / ${data.license?.maxUses || '∞'}`],
+      ['Tổng Ruby dùng', `${summary.totalRubyUsed ?? 0}`],
+      ['Số sự kiện tool', `${summary.totalToolEvents ?? 0}`],
+      ['Hoạt động gần nhất', summary.lastActivityAt ? new Date(summary.lastActivityAt).toLocaleString('vi-VN') : '—'],
+      ['HSD', data.license?.expire ? new Date(data.license.expire).toLocaleString('vi-VN') : '—'],
+      ['Ngày tạo', data.license?.createdAt ? new Date(data.license.createdAt).toLocaleString('vi-VN') : '—']
+    ];
+
+    content.innerHTML = rows.map(([label, value]) => `
+      <div style="border:1px solid rgba(148,163,184,0.12); border-radius:12px; background:rgba(15,23,42,0.7); padding:12px;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; margin-bottom:6px;">${label}</div>
+        <div style="color:#f8fafc; font-weight:600; word-break:break-word;">${value}</div>
+      </div>
+    `).join('');
+
+    const usage = (data.recentUsage || []).slice(0, 15);
+    const usageHtml = usage.length ? usage.map(item => {
+      const rubyText = item.rubyAmount != null ? `Ruby: ${item.rubyAmount}` : '';
+      const charText = item.characterName ? `Nhân vật: ${item.characterName}${item.characterId ? ` (${item.characterId})` : ''}` : '';
+      const extra = [rubyText, charText].filter(Boolean).join(' | ');
+      return `
+        <div style="border-top:1px solid rgba(148,163,184,0.12); padding-top:12px; margin-top:12px;">
+          <div style="font-weight:700; color:#fbbf24;">${new Date(item.createdAt).toLocaleString('vi-VN')}</div>
+          <div style="margin-top:6px; color:#e2e8f0;">Host: ${item.hostId || '-'} | Platform: ${item.platform || '-'} | UserKey: ${item.userKey || '-'} | IP: ${item.ip || '-'} | Action: ${item.action || '-'}${extra ? ` | ${extra}` : ''}</div>
+        </div>
+      `;
+    }).join('') : '<div style="padding-top:12px; color:#94a3b8;">Chưa có lịch sử dùng tool.</div>';
+
+    content.insertAdjacentHTML('beforeend', `
+      <div style="grid-column:1 / -1; margin-top:8px; border:1px solid rgba(148,163,184,0.12); border-radius:12px; background:rgba(15,23,42,0.7); padding:14px;">
+        <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:#94a3b8; margin-bottom:8px;">Lịch sử dùng gần đây</div>
+        ${usageHtml}
+      </div>
+    `);
+
+    modal.style.display = 'flex';
+  } catch (err) {
+    setResult('Lỗi lấy chi tiết key: ' + err.message, true);
+  }
+}
+
+function closeKeyDetail() {
+  document.getElementById('keyDetailModal').style.display = 'none';
 }
 
 async function deleteSelectedKey() {
@@ -222,7 +363,7 @@ async function loadToolHistory() {
     }
 
     if (!data.data.length) {
-      tbody.innerHTML = '<tr><td colspan="9">Chưa có dữ liệu sử dụng</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="padding: 18px; text-align:center; color:#94a3b8;">Chưa có dữ liệu sử dụng</td></tr>';
       return;
     }
 
@@ -231,16 +372,16 @@ async function loadToolHistory() {
       const date = item.createdAt ? new Date(item.createdAt).toLocaleString('vi-VN') : '—';
       const userKeyText = item.userKey || '—';
       row.innerHTML = `
-        <td>${date}</td>
-        <td>${item.key || '—'}</td>
-        <td>${item.hostId || '—'}</td>
-        <td>${item.platform || '—'}</td>
-        <td>${item.action || '—'}</td>
-        <td title="${userKeyText}">${userKeyText}</td>
-        <td>${item.ip || '—'}</td>
-        <td>${item.usageCost ?? 0}</td>
-        <td>${item.remaining ?? '∞'}</td>
-        <td style="color:${item.success ? 'green' : 'red'}; font-weight:bold;">${item.success ? 'Thành công' : (item.message || 'Lỗi')}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${date}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #60a5fa; font-weight: 700;">${item.key || '—'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.hostId || '—'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.platform || '—'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #fbbf24; font-weight: 600;">${item.action || '—'}</td>
+        <td title="${userKeyText}" style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${userKeyText}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.ip || '—'}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.usageCost ?? 0}</td>
+        <td style="padding: 12px 10px; text-align: center; color: #e2e8f0;">${item.remaining ?? '∞'}</td>
+        <td style="padding: 12px 10px; text-align: center; color:${item.success ? '#4ade80' : '#f87171'}; font-weight:700;">${item.success ? 'Thành công' : (item.message || 'Lỗi')}</td>
       `;
       tbody.appendChild(row);
     });
