@@ -96,6 +96,7 @@ const CARD_RATE_MAP = Object.freeze({
 });
 const MB_SPIN_COST_MAP = Object.freeze({ 1: 1, 5: 5, 10: 10, 22: 20, 35: 30, 65: 50 });
 const CREDIT_REWARD_MAP = Object.freeze({ 1: 1, 2: 2, 5: 5, 10: 10, 20: 30, 30: 50, 50: 100 });
+const ACCOUNT_CREDIT_SALE_MAP = Object.freeze({ 1: 1, 5: 5, 10: 11, 20: 23, 50: 60 });
 
 // 3 loại thẻ được phép nạp: Vina, Viettel, Garena
 const ALLOWED_CARD_TELCOS = Object.freeze({
@@ -3790,6 +3791,29 @@ app.get("/api/account/card-history", requireUserAuth, async (req, res) => {
         return res.json({ success: true, data: list });
     } catch (err) {
         return res.status(500).json({ success: false, message: "Server error" });
+    }
+});
+
+app.post("/api/account/buy-credit", requireUserAuth, async (req, res) => {
+    try {
+        await waitForDB();
+        const credits = Math.floor(Number(req.body?.credits));
+        const bonusCredits = ACCOUNT_CREDIT_SALE_MAP[credits] || credits;
+        if (!Number.isInteger(credits) || credits < 1 || credits > 100) {
+            return res.status(400).json({ success: false, message: "Gói credit phải từ 1 đến 100 credit." });
+        }
+        const cost = credits * 10000;
+        const result = await accountsCollection.findOneAndUpdate(
+            { _id: req.user._id, balance: { $gte: cost } },
+            { $inc: { balance: -cost, credits: bonusCredits }, $set: { updatedAt: new Date() } },
+            { returnDocument: "after" }
+        );
+        if (!result) return res.status(400).json({ success: false, message: `Số dư không đủ. Cần ${cost.toLocaleString("vi-VN")}đ.` });
+        const user = result.value || result;
+        return res.json({ success: true, balance: user.balance || 0, credits: user.credits || 0, purchasedCredits: credits, bonusCredits: bonusCredits - credits, message: bonusCredits > credits ? `Đã mua ${credits} credit và nhận thêm ${bonusCredits - credits} credit sale.` : `Đã mua ${credits} credit.` });
+    } catch (err) {
+        console.error("Buy account credit error:", err);
+        return res.status(500).json({ success: false, message: "Lỗi mua credit." });
     }
 });
 
