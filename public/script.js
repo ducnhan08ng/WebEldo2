@@ -1,552 +1,767 @@
-// ================= DEVICE ID =================
-let deviceId = localStorage.getItem("deviceId");
-if (!deviceId) {
-    deviceId = "DEV-" + Math.random().toString(36).substring(2, 12);
-    localStorage.setItem("deviceId", deviceId);
-}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNAKEQUEEN - El Dorado & GTD Center</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-// ================= TOAST SYSTEM (Thay thế alert/prompt) =================
-function showToast(message, type = 'info') {
-    const container = document.getElementById('toastContainer');
-    if (!container) return;
+    <!-- Anti-Devtools Optimization -->
+    <script>
+    (() => {
+        "use strict";
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 600;
+        if (isMobile) {
+            document.addEventListener("contextmenu", e => e.preventDefault(), true);
+            window.addEventListener("keydown", blockShortcut, true);
+            function blockShortcut(e) {
+                const key = e.key.toUpperCase();
+                if (key === "F12" || (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(key)) || (e.ctrlKey && key === "U")) {
+                    e.preventDefault(); e.stopPropagation();
+                }
+            }
+            return;
+        }
+        function blockShortcut(e) {
+            const key = e.key.toUpperCase();
+            if (key === "F12" || (e.ctrlKey && e.shiftKey && ["I","J","C"].includes(key)) || (e.ctrlKey && key === "U")) {
+                e.preventDefault(); e.stopPropagation();
+            }
+        }
+        window.addEventListener("keydown", blockShortcut, true);
+        document.addEventListener("contextmenu", e => e.preventDefault(), true);
+    })();
+    </script>
+</head>
+<body>
+
+<!-- ============ TOAST NOTIFICATION CONTAINER ============ -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ============ CONTAINER CHÍNH ============ -->
+<div class="container">
     
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    
-    const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
-    toast.innerHTML = `<i class="fa-solid ${icon}" style="font-size: 16px;"></i> <span>${escapeHtml(message)}</span>`;
-    
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.animation = 'toastOut 0.3s forwards';
-        setTimeout(() => toast.remove(), 300);
-    }, 3200);
-}
+    <!-- TOP BAR TÀI KHOẢN -->
+    <div class="user-top-bar" id="userTopBar">
+        <div class="guest-nav" id="guestNav">
+            <button type="button" class="btn-top-auth" onclick="openAuthModal('login')">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+            </button>
+            <button type="button" class="btn-top-auth btn-top-register" onclick="openAuthModal('register')">
+                <i class="fa-solid fa-user-plus"></i> Đăng ký
+            </button>
+        </div>
 
-function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
-}
+        <div class="user-nav" id="userNav" style="display: none;">
+            <div class="user-balance-badge" onclick="openAccountModal('deposit')" title="Bấm để nạp thêm tiền">
+                <i class="fa-solid fa-wallet" style="color: #10b981;"></i>
+                <span class="balance-label">Số dư:</span>
+                <strong id="userBalanceText" class="balance-value">0đ</strong>
+                <span class="credit-pill" id="userCreditsText">0 credit</span>
+            </div>
+            <button type="button" class="btn-user-profile" id="btnUserProfile" onclick="openAccountModal('info')" title="Quản lý tài khoản">
+                <i class="fa-solid fa-user"></i>
+                <span id="userDisplayName">USER</span>
+            </button>
+        </div>
+    </div>
 
-// ================= DỮ LIỆU BẢNG GIÁ =================
-const ITEMS_PER_PAGE = 6;
+    <!-- LOGO & BRANDING -->
+    <div class="logo-section">
+        <div class="logo-badge">
+            <i class="fa-solid fa-gem"></i>
+            <span>SNAKEQUEEN</span>
+        </div>
+        <h1>Nhận Gibong và Azure</h1>
+        <p class="subtitle">Tham gia ngay Event 1500 Sub để nhận Gibong và Azure miễn phí</p>
+    </div>
 
-const PRICE_DATA = {
-    elDorado: [
-        { name: "Key Tool Box El 5 Lần",       price: "50.000₫",     icon: "fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 10 Lần",      price: "100.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 30 Lần",      price: "200.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 50 Lần",      price: "300.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
-        { name: "Ruby x4.000",                 price: "50.000₫",     icon: "fa-gem",             color: "#fbbf24" },
-        { name: "Ruby x10.000",                price: "100.000₫",    icon: "fa-gem",             color: "#fbbf24" },
-        { name: "x1 Item A",                   price: "50.000₫",     icon: "fa-hammer",          color: "#fde68a" },
-        { name: "x3 Item A",                   price: "120.000₫",    icon: "fa-hammer",          color: "#fde68a" },
-        { name: "x1 Random 7s Level 100",      price: "20.000₫",     icon: "fa-user",            color: "#60a5fa" },
-        { name: "x3 Random 7s Level 100",      price: "60.000₫",     icon: "fa-users",           color: "#a78bfa" },
-        { name: "x1 Tự Chọn 7s Level 100",     price: "50.000₫",     icon: "fa-user",            color: "#10b981" },
-        { name: "x3 Tự Chọn 7s Level 100",     price: "100.000₫",    icon: "fa-users",           color: "#059669" },
-    ],
-    gtd: [
-        { name: "x50.000 Vỏ Sò",       price: "50.000₫",      icon: "fa-bolt",           color: "#3b82f6" },
-        { name: "x120.000 Vỏ Sò",      price: "100.000₫",     icon: "fa-bolt",           color: "#3b82f6" },
-        { name: "x1.000 Magic",        price: "100.000₫",     icon: "fa-bolt",           color: "#60a5fa" },
-        { name: "x10.000 Ruby",        price: "100.000₫",     icon: "fa-bolt",           color: "#60a5fa" },
-        { name: "100.000 Diamond",     price: "100.000₫",     icon: "fa-bolt",           color: "#2563eb" },
-    ]
-};
+    <!-- NÚT NHẬN MÃ -->
+    <button onclick="getReward()" class="btn-action btn-primary" id="btnGetReward">
+        <i class="fa-solid fa-gift"></i>
+        <span>Nhận Mã</span>
+    </button>
+    <div id="code" class="code-display">— — — —</div>
 
-let elDoradoPage = 1;
-let gtdPage = 1;
+    <!-- FORM NHẬP THÔNG TIN MÃ -->
+    <div id="codeInputSection" class="code-input-section" style="display:none;">
+        <p class="sub">Nhập thông tin tài khoản và mã để xác nhận gửi</p>
 
-// ================= RENDER BẢNG GIÁ =================
-function renderPriceGrid(data, page, gridId, paginationId, type) {
-    const grid = document.getElementById(gridId);
-    const pagination = document.getElementById(paginationId);
-    if (!grid || !pagination) return;
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-user"></i> User ID</label>
+                <input id="userIdInput" type="text" class="form-input" placeholder="Nhập ID tài khoản">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-gamepad"></i> Nền tảng</label>
+                <select id="platformSelect" class="form-select">
+                    <option value="">Chọn nền tảng</option>
+                    <option value="AMO">AMO</option>
+                    <option value="ATV">ATV</option>
+                    <option value="LG">LG</option>
+                    <option value="SSVN">SSVN</option>
+                </select>
+            </div>
+        </div>
 
-    const totalPages = Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE));
-    if (page > totalPages) page = totalPages;
-    if (page < 1) page = 1;
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-key"></i> Mã của bạn</label>
+                <input id="userCodeInput" type="text" class="form-input" placeholder="Mã đã nhận">
+            </div>
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fa-solid fa-heart"></i> Quà Lâu Đài Cấp 8
+                    <a href="https://www.youtube.com/watch?v=TmG87_sdFdA" target="_blank" class="yt-link">▶ Xem HD</a>
+                </label>
+                <input id="lucyAnswerInput" type="number" class="form-input" placeholder="Nhập số lượng">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-gem"></i> Số Ruby</label>
+                <input id="rubyAnswerInput" type="number" class="form-input" placeholder="Số lượng Ruby">
+            </div>
+        </div>
 
-    const start = (page - 1) * ITEMS_PER_PAGE;
-    const items = data.slice(start, start + ITEMS_PER_PAGE);
+        <button onclick="submitCode()" class="btn-action btn-primary submit-btn" id="btnSubmitCode">
+            <i class="fa-solid fa-paper-plane"></i>
+            <span>Gửi Mã</span>
+        </button>
+        <div id="submitStatus" class="submit-status"></div>
+    </div>
 
-    if (!items.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);">Không có dữ liệu</div>`;
-    } else {
-        grid.innerHTML = items.map(item => {
-            const isAutoKey = item.name.toLowerCase().includes("key tool box") || item.name.toLowerCase().includes("license");
-            return `
-                <div class="price-card" style="--accent:${item.color};">
-                    <div class="price-card-icon"><i class="fa-solid ${item.icon}"></i></div>
-                    <div class="price-card-name">${escapeHtml(item.name)}</div>
-                    <div class="price-card-price">${item.price}</div>
-                    <button class="price-card-btn" onclick="handlePriceBuy('${item.name.replace(/'/g, "\\'")}', '${item.price}')">
-                        ${isAutoKey ? '<i class="fa-solid fa-bolt"></i> Mua Tự Động' : '<i class="fa-brands fa-discord"></i> Mua'}
-                    </button>
+    <!-- CÁC NÚT TÍNH NĂNG CHÍNH -->
+    <div class="main-actions-stack">
+        <button onclick="openBuyKeyModal()" class="btn-action btn-buykey">
+            <i class="fa-solid fa-cart-shopping"></i> Mua Key Tool Box
+        </button>
+        <button onclick="openElDoradoToolbox()" class="btn-action btn-toolbox">
+            <i class="fa-solid fa-bolt"></i> Toolbox El Dorado
+        </button>
+        <button onclick="openMysteryBox()" class="btn-action btn-mystery-box">
+            <i class="fa-solid fa-gift"></i> Túi Mù Ruby
+        </button>
+        <div class="grid-2-btn">
+            <button onclick="openPrice()" class="btn-action btn-secondary">
+                <i class="fa-solid fa-tags"></i> Bảng giá El Dorado
+            </button>
+            <button onclick="openGTDPrice()" class="btn-action btn-secondary">
+                <i class="fa-solid fa-tags"></i> Bảng giá GTD
+            </button>
+        </div>
+    </div>
+
+    <!-- SOCIAL BUTTONS -->
+    <div class="social-buttons">
+        <a class="social-btn youtube" href="https://www.youtube.com/@SnakeGTD" target="_blank">
+            <i class="fa-brands fa-youtube"></i> YouTube
+        </a>
+        <a class="social-btn discord" href="https://discord.com/users/1201014400350429284" target="_blank">
+            <i class="fa-brands fa-discord"></i> Discord
+        </a>
+    </div>
+</div>
+
+<!-- ============ MODAL BẢNG GIÁ EL DORADO ============ -->
+<div id="priceModal" class="modal">
+    <div class="modal-content price-modal-content">
+        <span class="close" onclick="closePrice()">&times;</span>
+        <div class="modal-header">
+            <div class="modal-icon"><i class="fa-solid fa-coins"></i></div>
+            <h2>Bảng giá El Dorado</h2>
+            <h4>AMO / ATV / SSVN / LG</h4>
+            <p>Cập nhật giá các vật phẩm game mới nhất</p>
+        </div>
+        <div id="priceGrid" class="price-grid"></div>
+        <div id="pricePagination" class="pagination"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL BẢNG GIÁ GTD ============ -->
+<div id="gtdPriceModal" class="modal">
+    <div class="modal-content price-modal-content">
+        <span class="close" onclick="closeGTDPrice()">&times;</span>
+        <div class="modal-header">
+            <div class="modal-icon gtd"><i class="fa-solid fa-gem"></i></div>
+            <h2>Bảng giá GTD</h2>
+            <p>Cập nhật giá các gói nạp và vật phẩm GTD</p>
+        </div>
+        <div id="gtdPriceGrid" class="price-grid"></div>
+        <div id="gtdPricePagination" class="pagination"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL TÚI MÙ RUBY ============ -->
+<div id="mysteryBoxModal" class="modal">
+    <div class="modal-content mystery-box-content">
+        <span class="close" onclick="closeMysteryBox()">&times;</span>
+        
+        <div class="toolbox-heading">
+            <div class="toolbox-badge badge-red">
+                <i class="fa-solid fa-gift"></i> TÚI MÙ RUBY
+            </div>
+            <h2><i class="fa-solid fa-gem" style="color:#ef4444"></i> Túi Mù Ruby</h2>
+            <p>Mở hộp quà bí ẩn để nhận từ <strong>1.000</strong> đến <strong>10.000</strong> Ruby ngẫu nhiên (1 Credit = 1 lượt mở).</p>
+            <p class="warn-note">⚠️ Tất cả vật phẩm trong Web đều có tỉ lệ khiến tài khoản bị khóa. Vui lòng cân nhắc trước khi dùng.</p>
+        </div>
+
+        <!-- BANNER TÚI MÙ RUBY (ĐÃ TỐI ƯU GIAO DIỆN) -->
+        <div class="credit-balance-banner banner-red" id="mbSpinsBar" style="display: flex;">
+            <div class="banner-left">
+                <span class="sub-label">Lượt mở của bạn:</span>
+                <div class="credit-main-val">
+                    <strong id="mbUserSpins">0</strong> <span class="unit">Lượt</span>
+                    <small id="mbUserCreditsText">(Số dư: <span id="mbUserCredits">0</span> credit)</small>
                 </div>
-            `;
-        }).join('');
-    }
+            </div>
+            <button type="button" class="btn-deposit-shortcut btn-red" onclick="toggleMbBuyPanel()">
+                <i class="fa-solid fa-cart-plus"></i> Mua Thêm Lượt
+            </button>
+        </div>
 
-    let dotsHTML = '';
-    for (let i = 1; i <= totalPages; i++) {
-        dotsHTML += `<div class="page-dot ${i === page ? 'active' : ''}" onclick="goToPage('${type}', ${i})"></div>`;
-    }
+        <div id="mbGuestAlert" class="buykey-warning-box flex-between">
+            <div class="flex-align-gap">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Vui lòng <strong>Đăng nhập</strong> để lưu lượt mở và nhận Ruby!</span>
+            </div>
+            <button type="button" class="btn-deposit-shortcut btn-sm" onclick="openAuthModal('login')">Đăng nhập</button>
+        </div>
 
-    pagination.innerHTML = `
-        <button class="page-btn" onclick="changePage('${type}', -1)" ${page === 1 ? 'disabled' : ''}>
-            <i class="fa-solid fa-chevron-left"></i>
-        </button>
-        <div class="page-info">Trang ${page} / ${totalPages}</div>
-        <div class="page-dots">${dotsHTML}</div>
-        <button class="page-btn" onclick="changePage('${type}', 1)" ${page === totalPages ? 'disabled' : ''}>
-            <i class="fa-solid fa-chevron-right"></i>
-        </button>
-    `;
-}
+        <div id="mbBuyPanel" class="saved-keys-panel border-red" style="display: none;">
+            <div class="saved-keys-panel-header">
+                <span><i class="fa-solid fa-coins" style="color: #fbbf24;"></i> Mua lượt mở Túi Mù (1 Credit = 1 Lượt)</span>
+                <button type="button" class="btn-clear-all-keys" onclick="toggleMbBuyPanel(false)">Đóng</button>
+            </div>
+            <div class="mb-packages-grid">
+                <div class="mb-package-card" onclick="selectMbPackage(1, 1)">
+                    <div class="mb-pkg-spins">1 Lượt</div>
+                    <div class="mb-pkg-cost">1 Credit</div>
+                    <div class="mb-pkg-vnd">10.000đ</div>
+                </div>
+                <div class="mb-package-card" onclick="selectMbPackage(5, 5)">
+                    <div class="mb-pkg-spins">5 Lượt</div>
+                    <div class="mb-pkg-cost">5 Credit</div>
+                    <div class="mb-pkg-vnd">50.000đ</div>
+                </div>
+                <div class="mb-package-card" onclick="selectMbPackage(10, 10)">
+                    <div class="mb-pkg-spins">10 Lượt</div>
+                    <div class="mb-pkg-cost">10 Credit</div>
+                    <div class="mb-pkg-vnd">100.000đ</div>
+                </div>
+                <div class="mb-package-card" onclick="selectMbPackage(22, 20)">
+                    <div class="mb-pkg-spins text-emerald">22 Lượt <span class="bonus-tag">+2</span></div>
+                    <div class="mb-pkg-cost">20 Credit</div>
+                    <div class="mb-pkg-vnd">200.000đ</div>
+                </div>
+                <div class="mb-package-card" onclick="selectMbPackage(35, 30)">
+                    <div class="mb-pkg-spins text-emerald">35 Lượt <span class="bonus-tag">+5</span></div>
+                    <div class="mb-pkg-cost">30 Credit</div>
+                    <div class="mb-pkg-vnd">300.000đ</div>
+                </div>
+                <div class="mb-package-card" onclick="selectMbPackage(65, 50)">
+                    <div class="mb-pkg-spins text-emerald">65 Lượt <span class="bonus-tag">+15</span></div>
+                    <div class="mb-pkg-cost">50 Credit</div>
+                    <div class="mb-pkg-vnd">500.000đ</div>
+                </div>
+            </div>
+            <div class="mb-buy-actions">
+                <input id="mbCustomSpinsInput" type="number" class="mb-buy-input" placeholder="Số lượt" min="1" max="100" value="1" oninput="updateMbBuyBtn()">
+                <button type="button" id="mbConfirmBuyBtn" class="mb-btn-confirm-buy" onclick="confirmBuyMbSpins()">
+                    <i class="fa-solid fa-bolt"></i> Mua 1 Lượt (1 Credit)
+                </button>
+            </div>
+        </div>
 
-function changePage(type, delta) {
-    if (type === 'elDorado') {
-        elDoradoPage += delta;
-        renderPriceGrid(PRICE_DATA.elDorado, elDoradoPage, 'priceGrid', 'pricePagination', 'elDorado');
-    } else if (type === 'gtd') {
-        gtdPage += delta;
-        renderPriceGrid(PRICE_DATA.gtd, gtdPage, 'gtdPriceGrid', 'gtdPricePagination', 'gtd');
-    }
-}
+        <div class="toolbox-grid">
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-user text-rose"></i> ID Tài Khoản</label>
+                <input id="mbHostId" type="text" class="form-input" placeholder="Nhập ID tài khoản game">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-gamepad text-rose"></i> Nền tảng</label>
+                <select id="mbPlatform" class="form-select" onchange="toggleMbEmail()">
+                    <option value="">Chọn nền tảng</option>
+                    <option value="AMO">AMO</option>
+                    <option value="ATV">ATV</option>
+                    <option value="LG">LG</option>
+                    <option value="SS">SS</option>
+                </select>
+            </div>
+            <div class="form-group toolbox-field-wide" id="mbEmailRow" style="display:none;">
+                <label class="form-label"><i class="fa-solid fa-envelope text-rose"></i> Email (ATV)</label>
+                <input id="mbEmail" type="email" class="form-input" placeholder="email@example.com">
+            </div>
+            <div class="form-group toolbox-field-wide">
+                <label class="form-label"><i class="fa-solid fa-key text-rose"></i> Mã Xác Minh</label>
+                <input id="mbUserKey" type="text" class="form-input" placeholder="Mã xác minh (nếu có)">
+            </div>
+        </div>
 
-function goToPage(type, page) {
-    if (type === 'elDorado') {
-        elDoradoPage = page;
-        renderPriceGrid(PRICE_DATA.elDorado, elDoradoPage, 'priceGrid', 'pricePagination', 'elDorado');
-    } else if (type === 'gtd') {
-        gtdPage = page;
-        renderPriceGrid(PRICE_DATA.gtd, gtdPage, 'gtdPriceGrid', 'gtdPricePagination', 'gtd');
-    }
-}
+        <div class="mystery-grid" id="mysteryGrid">
+            <div class="mystery-box-item" onclick="clickMysteryBox(0)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(1)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(2)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(3)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(4)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(5)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(6)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(7)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+            <div class="mystery-box-item" onclick="clickMysteryBox(8)"><div class="box-inner"><i class="fa-solid fa-gift"></i><span>?</span></div></div>
+        </div>
 
-function handlePriceBuy(name, price) {
-    const lowerName = (name || "").toLowerCase();
-    if (lowerName.includes("key tool box") || lowerName.includes("license")) {
-        closePrice(); closeGTDPrice();
-        openBuyKeyModal();
-        if (lowerName.includes("5 lần") || price.includes("50.000")) selectCreditPackage(5);
-        else if (lowerName.includes("10 lần") || price.includes("100.000")) selectCreditPackage(10);
-        else if (lowerName.includes("30 lần") || price.includes("200.000")) selectCreditPackage(20);
-        else if (lowerName.includes("50 lần") || price.includes("300.000")) selectCreditPackage(30);
-        else selectCreditPackage(1);
-        return;
-    }
-    window.open("https://discord.com/users/1201014400350429284", "_blank");
-}
+        <div id="mysteryBoxStatus" class="toolbox-status" style="display:none;"></div>
+    </div>
+</div>
 
-// ================= NHẬN MÃ =================
-function getReward() {
-    if (window.__DEVTOOLS_BLOCKED__) return;
-    const btn = document.getElementById("btnGetReward");
-    if (!btn) return;
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo mã...</span>';
+<!-- ============ MODAL TOOLBOX EL DORADO ============ -->
+<div id="elDoradoToolboxModal" class="modal">
+    <div class="modal-content toolbox-content">
+        <span class="close" onclick="closeElDoradoToolbox()">&times;</span>
 
-    fetch("/generate-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deviceId })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            document.getElementById("code").innerText = data.code;
-            document.getElementById("userCodeInput").value = data.code;
-            document.getElementById("codeInputSection").style.display = "block";
-            btn.style.display = "none";
-            showToast("Đã tạo mã thành công!", "success");
-        } else {
-            showToast(data.message || "Không thể tạo mã", "error");
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-gift"></i> <span>Nhận Mã</span>';
-        }
-    })
-    .catch(err => {
-        showToast("Lỗi kết nối: " + err.message, "error");
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-gift"></i> <span>Nhận Mã</span>';
-    });
-}
+        <div class="toolbox-heading">
+            <div class="toolbox-badge">
+                <i class="fa-solid fa-shield-halved"></i> SECURE TOOL
+            </div>
+            <h2><i class="fa-solid fa-bolt" style="color:#fbbf24"></i> El Dorado Toolbox</h2>
+            <p>Nhập thông tin tài khoản và license key để gửi Ruby, Random 7s hoặc 7s tự chọn.</p>
+            <p class="warn-note">⚠️ Tất cả vật phẩm trong Web đều có tỉ lệ khiến tài khoản bị khóa. Vui lòng cân nhắc trước khi dùng.</p>
+        </div>
 
-function submitCode() {
-    const userId = document.getElementById("userIdInput").value.trim();
-    const platform = document.getElementById("platformSelect").value;
-    const userCode = document.getElementById("userCodeInput").value.trim();
-    const displayedCode = document.getElementById("code").innerText;
-    const lucyAnswer = document.getElementById("lucyAnswerInput").value.trim();
-    const rubyAnswer = document.getElementById("rubyAnswerInput").value.trim();
+        <div class="toolbox-progress">
+            <div class="toolbox-step is-active" id="step1"><span>1</span>Nhập thông tin</div>
+            <div class="toolbox-step" id="step2"><span>2</span>Xác thực</div>
+            <div class="toolbox-step" id="step3"><span>3</span>Xử lý</div>
+            <div class="toolbox-step" id="step4"><span>4</span>Hoàn tất</div>
+        </div>
 
-    if (!userId) return showToast("Vui lòng nhập ID!", "error");
-    if (!platform) return showToast("Vui lòng chọn nền tảng!", "error");
-    if (!userCode) return showToast("Vui lòng nhập mã!", "error");
-    if (!lucyAnswer) return showToast("Vui lòng trả lời câu hỏi Lâu Đài!", "error");
-    if (!rubyAnswer) return showToast("Vui lòng trả lời số lượng Ruby!", "error");
+        <form id="elDoradoToolboxForm" onsubmit="submitElDoradoToolbox(event)">
+            <div class="toolbox-grid">
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-user"></i> ID</label>
+                    <input id="elHostIdInput" type="text" class="form-input" placeholder="Nhập ID tài khoản">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-gamepad"></i> Platform</label>
+                    <select id="elPlatformSelect" class="form-select">
+                        <option value="">Chọn nền tảng</option>
+                        <option value="AMO">AMO</option>
+                        <option value="ATV">ATV</option>
+                        <option value="LG">LG</option>
+                        <option value="SS">SS</option>
+                    </select>
+                </div>
 
-    const btn = document.getElementById("btnSubmitCode");
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';
+                <div class="form-group toolbox-field-wide" id="elEmailGroup" style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-envelope"></i> Email (ATV)</label>
+                    <input id="elEmailInput" type="email" class="form-input" placeholder="email@example.com">
+                </div>
 
-    fetch("/submit-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            deviceId, userId, platform,
-            userInputCode: userCode, systemCode: displayedCode,
-            lucyAnswer, rubyAnswer, timestamp: new Date().toISOString()
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            showToast("Gửi mã thành công!", "success");
-            document.getElementById("userIdInput").value = "";
-            document.getElementById("platformSelect").value = "";
-            document.getElementById("userCodeInput").value = "";
-            document.getElementById("lucyAnswerInput").value = "";
-            document.getElementById("rubyAnswerInput").value = "";
-        } else {
-            showToast(data.message || "Gửi thất bại", "error");
-        }
-    })
-    .catch(err => showToast("Lỗi: " + err.message, "error"))
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Gửi Mã</span>';
-    });
-}
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-key"></i> Mã Xác Minh</label>
+                    <input id="elUserKeyInput" type="text" class="form-input" placeholder="Mã Xác Minh">
+                </div>
+                <div class="form-group">
+                    <label class="form-label"><i class="fa-solid fa-list-check"></i> Chế độ</label>
+                    <select id="elToolboxActionSelect" class="form-select" onchange="updateElDoradoToolboxMode()">
+                        <option value="ruby">Gửi Ruby</option>
+                        <option value="feature11">Random 7s</option>
+                        <option value="feature13">Gửi 7s (Nhân vật cụ thể)</option>
+                    </select>
+                </div>
 
-// ================= MODAL OPEN/CLOSE =================
-function openPrice() {
-    elDoradoPage = 1;
-    renderPriceGrid(PRICE_DATA.elDorado, elDoradoPage, 'priceGrid', 'pricePagination', 'elDorado');
-    document.getElementById("priceModal").style.display = "flex";
-}
-function closePrice() { document.getElementById("priceModal").style.display = "none"; }
+                <div class="form-group toolbox-field-wide" id="elRubyAmountGroup">
+                    <label class="form-label"><i class="fa-solid fa-gem"></i> Số lượng Ruby</label>
+                    <input id="elRubyAmountInput" type="number" class="form-input" placeholder="1 - 5.000" min="1" max="5000">
+                </div>
 
-function openGTDPrice() {
-    gtdPage = 1;
-    renderPriceGrid(PRICE_DATA.gtd, gtdPage, 'gtdPriceGrid', 'gtdPricePagination', 'gtd');
-    document.getElementById("gtdPriceModal").style.display = "flex";
-}
-function closeGTDPrice() { document.getElementById("gtdPriceModal").style.display = "none"; }
+                <div class="form-group" data-el-character-feature style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-user-ninja"></i> Level hiện tại</label>
+                    <input id="elCharacterLevelInput" type="number" class="form-input" value="100" readonly>
+                </div>
+                <div class="form-group" data-el-character-feature style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-crown"></i> Max Level</label>
+                    <input id="elCharacterMaxLevelInput" type="number" class="form-input" value="100" readonly>
+                </div>
+                <div class="form-group toolbox-field-wide" data-el-feature13 style="display:none;">
+                    <label class="form-label"><i class="fa-solid fa-id-badge"></i> ID Nhân vật</label>
+                    <select id="elCharacterIdInput" class="form-select">
+                        <option value="63">Ace</option>
+                        <option value="66">Echo</option>
+                        <option value="67">Smart</option>
+                        <option value="68">Khan</option>
+                        <option value="49">Lucy Thiên Thần</option>
+                        <option value="50">Lucy Oto</option>
+                        <option value="64">Bee</option>
+                        <option value="65">Ruby</option>
+                        <option value="48">Gold</option>
+                        <option value="56">Gin</option>
+                        <option value="62">Bensi</option>
+                        <option value="75">Jey</option>
+                        <option value="81">Koo</option>
+                        <option value="99">Thrue</option>
+                    </select>
+                </div>
 
-// ================= TOOLBOX EL DORADO =================
-const EL_DORADO_HWID_KEY = "elDoradoToolboxHwid";
-const EL_DORADO_CHARACTER_IDS = new Set([63, 66, 67, 68, 49, 50, 64, 65, 48, 56, 62, 75, 81, 99]);
+                <div class="form-group toolbox-field-wide">
+                    <label class="form-label"><i class="fa-solid fa-shield"></i> License Key</label>
+                    <input id="elLicenseKeyInput" type="password" class="form-input" placeholder="XXXX-XXXX-XXXX-XXXX">
+                </div>
+            </div>
 
-function getElDoradoHwid() {
-    let hwid = localStorage.getItem(EL_DORADO_HWID_KEY);
-    if (!hwid) {
-        hwid = `WEB-EL-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-        localStorage.setItem(EL_DORADO_HWID_KEY, hwid);
-    }
-    return hwid;
-}
+            <button type="submit" id="elDoradoSubmitBtn" class="btn-action btn-toolbox toolbox-submit-btn">
+                <i class="fa-solid fa-play"></i>
+                <span id="elStepSendLabel">Bắt đầu gửi Ruby (1 lượt)</span>
+            </button>
+        </form>
 
-function openElDoradoToolbox() {
-    setElDoradoStatus("");
-    updateElDoradoToolboxMode();
-    resetToolboxSteps();
-    document.getElementById("elDoradoToolboxModal").style.display = "flex";
-}
+        <div id="elDoradoToolboxStatus" class="toolbox-status"></div>
+    </div>
+</div>
 
-function closeElDoradoToolbox() {
-    document.getElementById("elDoradoToolboxModal").style.display = "none";
-}
-
-function setElDoradoStatus(message, type = "") {
-    const status = document.getElementById("elDoradoToolboxStatus");
-    if (!status) return;
-    status.textContent = message;
-    status.className = `toolbox-status${type ? ` is-${type}` : ""}`;
-}
-
-function resetToolboxSteps() {
-    ["step1", "step2", "step3", "step4"].forEach(id => {
-        document.getElementById(id)?.classList.remove("is-active", "is-done", "is-error");
-    });
-    document.getElementById("step1")?.classList.add("is-active");
-}
-
-function setToolboxStep(stepNum, state) {
-    const step = document.getElementById("step" + stepNum);
-    if (!step) return;
-    step.classList.remove("is-active", "is-done", "is-error");
-    if (state) step.classList.add("is-" + state);
-}
-
-function updateElDoradoToolboxMode() {
-    const action = document.getElementById("elToolboxActionSelect")?.value || "ruby";
-    const isFeature13 = action === "feature13";
-    const isFeature11 = action === "feature11";
-    const isCharacterFeature = isFeature11 || isFeature13;
-
-    const rubyGroup = document.getElementById("elRubyAmountGroup");
-    if (rubyGroup) rubyGroup.style.display = isCharacterFeature ? "none" : "";
-
-    document.querySelectorAll("[data-el-feature13]").forEach(el => el.style.display = isFeature13 ? "" : "none");
-    document.querySelectorAll("[data-el-character-feature]").forEach(el => el.style.display = isCharacterFeature ? "" : "none");
-
-    const sendLabel = document.getElementById("elStepSendLabel");
-    if (sendLabel) {
-        sendLabel.textContent = isFeature13 ? "Gửi 7s (5 lượt)" : isFeature11 ? "Random 7s (2 lượt)" : "Bắt đầu gửi Ruby (1 lượt)";
-    }
-}
-
-async function submitElDoradoToolbox(event) {
-    event.preventDefault();
-
-    const hostId = document.getElementById("elHostIdInput").value.trim();
-    const platform = document.getElementById("elPlatformSelect").value.trim().toUpperCase();
-    const userKey = document.getElementById("elUserKeyInput").value.trim();
-    const action = document.getElementById("elToolboxActionSelect").value;
-    const isFeature13 = action === "feature13";
-    const isFeature11 = action === "feature11";
-    const isCharacterFeature = isFeature11 || isFeature13;
-    const rubyAmount = Number(document.getElementById("elRubyAmountInput").value);
-    const characterId = Number(document.getElementById("elCharacterIdInput").value);
-    const key = document.getElementById("elLicenseKeyInput").value.trim().toUpperCase();
-    const submitBtn = document.getElementById("elDoradoSubmitBtn");
-
-    if (!hostId) return setElDoradoStatus("Vui lòng nhập ID.", "error");
-    if (!platform) return setElDoradoStatus("Vui lòng chọn Platform.", "error");
-    if (action === "ruby" && (!Number.isInteger(rubyAmount) || rubyAmount < 1 || rubyAmount > 5000)) {
-        return setElDoradoStatus("Số Ruby phải từ 1 đến 5.000.", "error");
-    }
-    if (isFeature13 && !EL_DORADO_CHARACTER_IDS.has(characterId)) {
-        return setElDoradoStatus("Nhân vật không thuộc danh sách hỗ trợ.", "error");
-    }
-    if (!key) return setElDoradoStatus("Vui lòng nhập License Key.", "error");
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang xử lý...</span>';
-
-    try {
-        setToolboxStep(1, "done"); setToolboxStep(2, "active");
-        setElDoradoStatus("Đang xác thực bảo mật...", "loading");
-
-        const payload = { key, hwid: getElDoradoHwid(), accountId: hostId, platform, userKey, action };
-        if (isCharacterFeature) {
-            payload.characterLevel = 100; payload.characterMaxLevel = 100;
-            if (isFeature13) payload.characterId = characterId;
-        } else {
-            payload.amount = rubyAmount;
-        }
-
-        const response = await fetch("/api/el-dorado/toolbox", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        const data = await response.json();
-
-        if (!response.ok || !data.success) throw new Error(data.message || "Xử lý thất bại");
-
-        setToolboxStep(2, "done"); setToolboxStep(3, "done"); setToolboxStep(4, "done");
-        setElDoradoStatus("Thao tác thành công! " + (data.remaining ? `Còn ${data.remaining} lượt.` : ""), "success");
-        showToast("Thao tác thành công!", "success");
-    } catch (err) {
-        setToolboxStep(2, "error");
-        setElDoradoStatus("Lỗi: " + err.message, "error");
-        showToast(err.message, "error");
-    } finally {
-        submitBtn.disabled = false;
-        updateElDoradoToolboxMode();
-    }
-}
-
-// ================= AUTH SESSION =================
-const AUTH_TOKEN_KEY = "rubyfree_user_token";
-const AUTH_USER_KEY = "rubyfree_user_cached";
-let currentUser = null;
-
-function getAuthToken() {
-    return localStorage.getItem(AUTH_TOKEN_KEY) || "";
-}
-
-function setAuthToken(token, userObj = null) {
-    if (token) {
-        localStorage.setItem(AUTH_TOKEN_KEY, token);
-        if (userObj) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userObj));
-    } else {
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-        localStorage.removeItem(AUTH_USER_KEY);
-    }
-}
-
-function initAuthSession() {
-    const token = getAuthToken();
-    if (!token) { updateTopNavUI(); return; }
-
-    try {
-        const cached = localStorage.getItem(AUTH_USER_KEY);
-        if (cached) { currentUser = JSON.parse(cached); updateTopNavUI(); }
-    } catch (e) {}
-    checkAuthStatus();
-}
-
-async function checkAuthStatus() {
-    const token = getAuthToken();
-    if (!token) return;
-
-    try {
-        const res = await fetch("/api/auth/me", { headers: { "Authorization": "Bearer " + token } });
-        const data = await res.json();
-        if (data.success && data.user) {
-            currentUser = data.user;
-            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
-            updateTopNavUI();
-        } else if (res.status === 401 || res.status === 403) {
-            setAuthToken(""); currentUser = null; updateTopNavUI();
-        }
-    } catch (e) {}
-}
-
-function updateTopNavUI() {
-    const guestNav = document.getElementById("guestNav");
-    const userNav = document.getElementById("userNav");
-
-    if (currentUser) {
-        if (guestNav) guestNav.style.display = "none";
-        if (userNav) userNav.style.display = "flex";
-        document.getElementById("userDisplayName").textContent = currentUser.username || "USER";
+<!-- ============ MODAL ĐĂNG NHẬP / ĐĂNG KÝ ============ -->
+<div id="authModal" class="modal">
+    <div class="modal-content auth-modal-content">
+        <span class="close" onclick="closeAuthModal()">&times;</span>
         
-        const balance = Number(currentUser.balance || 0);
-        const credits = Number(currentUser.credits ?? Math.floor(balance / 10000));
+        <div class="auth-tabs">
+            <button type="button" class="auth-tab is-active" id="tabBtnLogin" onclick="switchAuthTab('login')">
+                <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+            </button>
+            <button type="button" class="auth-tab" id="tabBtnRegister" onclick="switchAuthTab('register')">
+                <i class="fa-solid fa-user-plus"></i> Đăng ký
+            </button>
+        </div>
+
+        <form id="loginForm" class="auth-form" onsubmit="submitLogin(event)">
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-user"></i> Tên tài khoản</label>
+                <input type="text" id="loginUsernameInput" class="form-input" placeholder="Nhập tên tài khoản" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-lock"></i> Mật khẩu</label>
+                <input type="password" id="loginPasswordInput" class="form-input" placeholder="Nhập mật khẩu" required autocomplete="current-password">
+            </div>
+            <button type="submit" id="loginSubmitBtn" class="btn-action btn-primary width-full mt-14">
+                <i class="fa-solid fa-right-to-bracket"></i> <span>Đăng nhập</span>
+            </button>
+            <p class="auth-switch-prompt">Chưa có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('register')">Đăng ký ngay</a></p>
+        </form>
+
+        <form id="registerForm" class="auth-form" style="display: none;" onsubmit="submitRegister(event)">
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-user"></i> Tên tài khoản</label>
+                <input type="text" id="regUsernameInput" class="form-input" placeholder="3-20 ký tự" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-envelope"></i> Email / Gmail</label>
+                <input type="email" id="regEmailInput" class="form-input" placeholder="vidu@gmail.com" required autocomplete="email">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-lock"></i> Mật khẩu</label>
+                <input type="password" id="regPasswordInput" class="form-input" placeholder="Tối thiểu 6 ký tự" required autocomplete="new-password">
+            </div>
+            <div class="form-group">
+                <label class="form-label"><i class="fa-solid fa-check-double"></i> Xác nhận mật khẩu</label>
+                <input type="password" id="regConfirmPasswordInput" class="form-input" placeholder="Nhập lại mật khẩu" required autocomplete="new-password">
+            </div>
+            <button type="submit" id="registerSubmitBtn" class="btn-action btn-buykey width-full mt-14">
+                <i class="fa-solid fa-user-plus"></i> <span>Tạo tài khoản</span>
+            </button>
+            <p class="auth-switch-prompt">Đã có tài khoản? <a href="javascript:void(0)" onclick="switchAuthTab('login')">Đăng nhập ngay</a></p>
+        </form>
+
+        <div id="authStatusBox" class="auth-status-box" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- ============ MODAL QUẢN LÝ TÀI KHOẢN & NẠP TIỀN ============ -->
+<div id="accountModal" class="modal">
+    <div class="modal-content account-modal-content">
+        <span class="close" onclick="closeAccountModal()">&times;</span>
         
-        document.getElementById("userBalanceText").textContent = balance.toLocaleString("vi-VN") + "đ";
-        document.getElementById("userCreditsText").textContent = credits + " credit";
-        document.getElementById("buyKeyCurrentCredits").textContent = credits;
-    } else {
-        if (guestNav) guestNav.style.display = "flex";
-        if (userNav) userNav.style.display = "none";
-    }
-}
+        <div class="toolbox-heading">
+            <div class="toolbox-badge badge-emerald">
+                <i class="fa-solid fa-circle-user"></i> TÀI KHOẢN
+            </div>
+            <h2><i class="fa-solid fa-wallet" style="color:#10b981"></i> Quản Lý Tài Khoản</h2>
+            <p>Xem số dư, nạp tiền bằng thẻ cào 24/7 và kiểm tra lịch sử nạp.</p>
+        </div>
 
-function openAuthModal(tab = "login") {
-    document.getElementById("authModal").style.display = "flex";
-    switchAuthTab(tab);
-}
-function closeAuthModal() { document.getElementById("authModal").style.display = "none"; }
+        <div class="account-tabs">
+            <button type="button" class="account-tab is-active" id="tabBtnAccInfo" onclick="switchAccountTab('info')">
+                <i class="fa-solid fa-id-card"></i> Thông tin
+            </button>
+            <button type="button" class="account-tab" id="tabBtnAccDeposit" onclick="switchAccountTab('deposit')">
+                <i class="fa-solid fa-money-bill-transfer"></i> Nạp thẻ cào
+            </button>
+            <button type="button" class="account-tab" id="tabBtnAccHistory" onclick="switchAccountTab('history')">
+                <i class="fa-solid fa-clock-rotate-left"></i> Lịch sử nạp
+            </button>
+        </div>
 
-function switchAuthTab(tab) {
-    document.getElementById("tabBtnLogin")?.classList.toggle("is-active", tab === "login");
-    document.getElementById("tabBtnRegister")?.classList.toggle("is-active", tab === "register");
-    document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
-    document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
-}
+        <div id="accTabInfo" class="acc-tab-pane">
+            <div class="account-info-card">
+                <div class="acc-info-row">
+                    <span class="label"><i class="fa-solid fa-user"></i> Tên người dùng:</span>
+                    <strong class="value" id="accInfoUsername">-</strong>
+                </div>
+                <div class="acc-info-row">
+                    <span class="label"><i class="fa-solid fa-envelope"></i> Gmail:</span>
+                    <strong class="value" id="accInfoEmail">-</strong>
+                </div>
+                <div class="acc-info-row highlight">
+                    <span class="label"><i class="fa-solid fa-wallet"></i> Số dư hiện tại:</span>
+                    <strong class="value balance-green" id="accInfoBalance">0đ</strong>
+                </div>
+                <div class="acc-info-row highlight">
+                    <span class="label"><i class="fa-solid fa-coins"></i> Credit khả dụng:</span>
+                    <strong class="value credit-blue" id="accInfoCredits">0 credit</strong>
+                </div>
+                <div class="acc-info-row highlight">
+                    <span class="label"><i class="fa-solid fa-gift text-purple"></i> Lượt Túi Mù Ruby:</span>
+                    <strong class="value text-purple" id="accInfoMysterySpins">0 lượt</strong>
+                </div>
+                <div class="acc-info-note">
+                    <i class="fa-solid fa-circle-info"></i> <strong>Quy đổi:</strong> Mỗi 10.000đ nạp vào tài khoản = <strong>1 Credit</strong> = <strong>1 lượt dùng Tool</strong>.
+                </div>
+            </div>
 
-async function submitLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById("loginUsernameInput")?.value.trim();
-    const password = document.getElementById("loginPasswordInput")?.value.trim();
-    if (!username || !password) return;
+            <div class="acc-actions-row">
+                <button type="button" class="btn-action btn-buykey" onclick="switchAccountTab('deposit')">
+                    <i class="fa-solid fa-circle-dollar-to-slot"></i> Nạp tiền
+                </button>
+                <button type="button" class="btn-action btn-secondary" onclick="openBuyKeyModal()">
+                    <i class="fa-solid fa-key"></i> Dùng Credit Mua Key
+                </button>
+                <button type="button" class="btn-danger-outline" onclick="handleLogout()">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất
+                </button>
+            </div>
+        </div>
 
-    try {
-        const res = await fetch("/api/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
-        const data = await res.json();
-        if (data.success && data.token) {
-            setAuthToken(data.token, data.user);
-            currentUser = data.user;
-            updateTopNavUI();
-            closeAuthModal();
-            showToast("Đăng nhập thành công!", "success");
-        } else {
-            showToast(data.message || "Đăng nhập thất bại", "error");
-        }
-    } catch (err) {
-        showToast("Lỗi kết nối máy chủ", "error");
-    }
-}
+        <div id="accTabDeposit" class="acc-tab-pane" style="display: none;">
+            <div class="deposit-rate-banner">
+                <i class="fa-solid fa-bolt" style="color: #fbbf24;"></i>
+                <span>Tỷ lệ: <strong>10.000đ = 1 Credit = 1 lượt dùng Tool</strong> (Duyệt tự động 24/7)</span>
+            </div>
 
-async function submitRegister(e) {
-    e.preventDefault();
-    const username = document.getElementById("regUsernameInput")?.value.trim();
-    const email = document.getElementById("regEmailInput")?.value.trim();
-    const password = document.getElementById("regPasswordInput")?.value.trim();
-    const confirmPass = document.getElementById("regConfirmPasswordInput")?.value.trim();
+            <form id="accDepositForm" onsubmit="submitAccountDeposit(event)">
+                <div class="toolbox-grid">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa-solid fa-sim-card"></i> Loại thẻ</label>
+                        <select id="accDepositTelcoSelect" class="form-select" required>
+                            <option value="">Chọn loại thẻ</option>
+                            <option value="VIETTEL">Viettel</option>
+                            <option value="VINAPHONE">Vinaphone (Vina)</option>
+                            <option value="GARENA">Garena</option>
+                        </select>
+                    </div>
 
-    if (password !== confirmPass) return showToast("Mật khẩu không khớp!", "error");
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa-solid fa-money-bill-wave"></i> Mệnh giá</label>
+                        <select id="accDepositAmountSelect" class="form-select" required>
+                            <option value="">Chọn mệnh giá</option>
+                            <option value="10000">10.000đ (+1 credit)</option>
+                            <option value="20000">20.000đ (+2 credit)</option>
+                            <option value="50000">50.000đ (+5 credit)</option>
+                            <option value="100000">100.000đ (+10 credit)</option>
+                            <option value="200000">20.000đ (+20 credit)</option>
+                            <option value="300000">300.000đ (+30 credit)</option>
+                            <option value="500000">500.000đ (+50 credit)</option>
+                        </select>
+                    </div>
 
-    try {
-        const res = await fetch("/api/auth/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, email, password })
-        });
-        const data = await res.json();
-        if (data.success && data.token) {
-            setAuthToken(data.token, data.user);
-            currentUser = data.user;
-            updateTopNavUI();
-            closeAuthModal();
-            showToast("Tạo tài khoản thành công!", "success");
-        } else {
-            showToast(data.message || "Đăng ký thất bại", "error");
-        }
-    } catch (err) {
-        showToast("Lỗi kết nối máy chủ", "error");
-    }
-}
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa-solid fa-barcode"></i> Số Serial</label>
+                        <input id="accDepositSerialInput" type="text" class="form-input" placeholder="Nhập số seri" required autocomplete="off">
+                    </div>
 
-function handleLogout() {
-    setAuthToken(""); currentUser = null; updateTopNavUI(); closeAccountModal();
-    showToast("Đã đăng xuất tài khoản", "info");
-}
+                    <div class="form-group">
+                        <label class="form-label"><i class="fa-solid fa-lock"></i> Mã thẻ (PIN)</label>
+                        <input id="accDepositCodeInput" type="text" class="form-input" placeholder="Nhập mã thẻ cào" required autocomplete="off">
+                    </div>
+                </div>
 
-// ================= BUY KEY SYSTEM =================
-function openBuyKeyModal() {
-    document.getElementById("buyKeyModal").style.display = "flex";
-    updateTopNavUI();
-}
-function closeBuyKeyModal() { document.getElementById("buyKeyModal").style.display = "none"; }
+                <div class="buykey-warning-box mt-12">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>LƯU Ý:</strong> Chọn đúng mệnh giá thẻ! Thẻ sai mệnh giá sẽ KHÔNG được cộng tiền.</span>
+                </div>
 
-function openAccountModal(tab = "info") {
-    if (!currentUser) return openAuthModal("login");
-    document.getElementById("accountModal").style.display = "flex";
-    switchAccountTab(tab);
-}
-function closeAccountModal() { document.getElementById("accountModal").style.display = "none"; }
+                <button type="submit" id="accDepositSubmitBtn" class="btn-action btn-buykey width-full mt-14">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span id="accDepositBtnText">Nạp thẻ ngay</span>
+                </button>
+            </form>
 
-function switchAccountTab(tab) {
-    document.getElementById("tabBtnAccInfo")?.classList.toggle("is-active", tab === "info");
-    document.getElementById("tabBtnAccDeposit")?.classList.toggle("is-active", tab === "deposit");
-    document.getElementById("tabBtnAccHistory")?.classList.toggle("is-active", tab === "history");
+            <div id="accDepositStatusBox" class="buykey-status-box" style="display: none;"></div>
+        </div>
 
-    document.getElementById("accTabInfo").style.display = tab === "info" ? "block" : "none";
-    document.getElementById("accTabDeposit").style.display = tab === "deposit" ? "block" : "none";
-    document.getElementById("accTabHistory").style.display = tab === "history" ? "block" : "none";
-}
+        <div id="accTabHistory" class="acc-tab-pane" style="display: none;">
+            <div class="acc-history-wrapper">
+                <table class="acc-history-table">
+                    <thead>
+                        <tr>
+                            <th>Thời gian</th>
+                            <th>Mã đơn</th>
+                            <th>Thẻ & Giá</th>
+                            <th>Seri</th>
+                            <th>Trạng thái</th>
+                            <th>Cộng tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accHistoryTableBody">
+                        <tr><td colspan="6" class="text-muted p-20">Đang tải lịch sử nạp...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
-// Global Window Modal Closer
-window.addEventListener("click", e => {
-    if (e.target.classList.contains("modal")) {
-        e.target.style.display = "none";
-    }
-});
+<!-- ============ MODAL MUA KEY TOOL BOX BẰNG CREDIT ============ -->
+<div id="buyKeyModal" class="modal">
+    <div class="modal-content buykey-content">
+        <span class="close" onclick="closeBuyKeyModal()">&times;</span>
 
-// POPUP ANNOUNCEMENT
-function closePopup() { document.getElementById("updatePopup").style.display = "none"; }
-function hideFor2Hours() {
-    localStorage.setItem("popup_hidden_until", Date.now() + 2 * 60 * 60 * 1000);
-    closePopup();
-}
+        <div class="toolbox-heading">
+            <div class="toolbox-badge badge-emerald">
+                <i class="fa-solid fa-coins"></i> DÙNG CREDIT
+            </div>
+            <h2><i class="fa-solid fa-key" style="color:#10b981"></i> Mua Key Tool Box</h2>
+            <p>Sử dụng số dư Credit trong tài khoản để Tạo Key mới hoặc Nạp thêm lượt dùng (1 Credit = 1 Lượt dùng = 10.000đ).</p>
+            
+            <div class="saved-keys-toggle-wrapper">
+                <button type="button" class="btn-saved-keys-toggle" onclick="toggleSavedKeysPanel()">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Key của bạn</span>
+                    <span class="saved-keys-count-pill" id="savedKeysCountPill">0</span>
+                    <i class="fa-solid fa-chevron-down" id="savedKeysToggleIcon"></i>
+                </button>
+            </div>
+        </div>
 
-document.addEventListener("DOMContentLoaded", () => {
-    initAuthSession();
-    const hiddenUntil = localStorage.getItem("popup_hidden_until");
-    if (!hiddenUntil || Date.now() > hiddenUntil) {
-        document.getElementById("updatePopup").style.display = "flex";
-    }
-});
+        <div id="savedKeysPanel" class="saved-keys-panel" style="display: none;">
+            <div class="saved-keys-panel-header">
+                <span><i class="fa-solid fa-wallet" style="color: #10b981;"></i> Key đã lưu trên trình duyệt</span>
+                <button type="button" class="btn-clear-all-keys" onclick="clearAllSavedKeys()">
+                    <i class="fa-solid fa-trash-can"></i> Xóa tất cả
+                </button>
+            </div>
+            <div id="savedKeysListContainer" class="saved-keys-list"></div>
+        </div>
+
+        <!-- BANNER SỐ DƯ MUA KEY (ĐÃ TỐI ƯU GIAO DIỆN) -->
+        <div class="credit-balance-banner" id="buyKeyCreditBanner">
+            <div class="banner-left">
+                <span class="sub-label">Số dư của bạn:</span>
+                <div class="credit-main-val">
+                    <strong id="buyKeyCurrentCredits">0</strong> <span class="unit">Credit</span>
+                    <small id="buyKeyCurrentVnd">(tương đương 0đ / 0 lượt)</small>
+                </div>
+            </div>
+            <button type="button" class="btn-deposit-shortcut" onclick="openAccountModal('deposit')">
+                <i class="fa-solid fa-plus-circle"></i> Nạp thêm tiền
+            </button>
+        </div>
+
+        <form id="buyKeyCreditForm" onsubmit="submitBuyKeyWithCredit(event)">
+            <div class="toolbox-grid">
+                <div class="form-group toolbox-field-wide">
+                    <label class="form-label"><i class="fa-solid fa-circle-question"></i> Bạn muốn:</label>
+                    <div class="has-key-options">
+                        <label class="radio-label">
+                            <input type="radio" name="creditBuyMode" value="new" checked onchange="toggleCreditBuyMode('new')">
+                            <span><i class="fa-solid fa-circle-plus"></i> Tạo License Key mới</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="creditBuyMode" value="topup" onchange="toggleCreditBuyMode('topup')">
+                            <span><i class="fa-solid fa-arrow-up-right-dots"></i> Nạp thêm lượt vào Key có sẵn</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group toolbox-field-wide" id="creditTargetKeyGroup" style="display: none;">
+                    <label class="form-label"><i class="fa-solid fa-key"></i> License Key cần nạp thêm lượt</label>
+                    <div class="flex-gap-8">
+                        <input id="creditTargetKeyInput" type="text" class="form-input text-uppercase" placeholder="Nhập key của bạn (VD: XXXX-XXXX-XXXX)">
+                        <button type="button" class="btn-check-key" onclick="verifyCreditTargetKey()">Kiểm tra</button>
+                    </div>
+                    <div id="creditKeyCheckMsg" class="key-check-msg"></div>
+                </div>
+
+                <div class="form-group toolbox-field-wide">
+                    <label class="form-label"><i class="fa-solid fa-layer-group"></i> Chọn gói lượt muốn mua</label>
+                    <div class="credit-package-grid">
+                        <div class="credit-pkg-card is-selected" onclick="selectCreditPackage(1)">
+                            <div class="pkg-uses">1 Lượt</div>
+                            <div class="pkg-cost">1 Credit (10k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(2)">
+                            <div class="pkg-uses">2 Lượt</div>
+                            <div class="pkg-cost">2 Credit (20k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(5)">
+                            <div class="pkg-uses">5 Lượt</div>
+                            <div class="pkg-cost">5 Credit (50k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(10)">
+                            <div class="pkg-uses">10 Lượt</div>
+                            <div class="pkg-cost">10 Credit (100k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(20)">
+                            <div class="pkg-uses text-emerald">30 Lượt <span class="bonus-tag">+10</span></div>
+                            <div class="pkg-cost">20 Credit (200k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(30)">
+                            <div class="pkg-uses text-emerald">50 Lượt <span class="bonus-tag">+20</span></div>
+                            <div class="pkg-cost">30 Credit (300k)</div>
+                        </div>
+                        <div class="credit-pkg-card" onclick="selectCreditPackage(50)">
+                            <div class="pkg-uses text-emerald">100 Lượt <span class="bonus-tag">+50</span></div>
+                            <div class="pkg-cost">50 Credit (500k)</div>
+                        </div>
+                    </div>
+                    <input type="hidden" id="selectedCreditsInput" value="1">
+                </div>
+            </div>
+
+            <div class="credit-checkout-summary">
+                <div class="summary-line">
+                    <span>Số lượt nhận được:</span>
+                    <strong id="summaryUsesText">+1 lượt dùng</strong>
+                </div>
+                <div class="summary-line">
+                    <span>Chi phí thanh toán:</span>
+                    <strong id="summaryCostText" class="text-sky">1 Credit (10.000đ)</strong>
+                </div>
+            </div>
+
+            <button type="submit" id="buyKeyCreditSubmitBtn" class="btn-action btn-buykey width-full mt-14">
+                <i class="fa-solid fa-circle-check"></i>
+                <span id="buyKeyCreditBtnText">Thanh toán 1 Credit & Nhận Key</span>
+            </button>
+        </form>
+
+        <div id="buyKeyCreditResultBox" class="buykey-status-box" style="display: none;"></div>
+    </div>
+</div>
+
+<!-- ============ POPUP ANNOUNCEMENT ============ -->
+<div id="updatePopup" class="popup-overlay">
+    <div class="popup-box">
+        <h2><i class="fa-solid fa-circle-info" style="color:#3b82f6"></i> Thông báo</h2>
+        <p>Cập nhật Acc Mới trong Shop Acc</p>
+        <p>Cập nhật Bảng giá và Giao diện Web mượt mà hơn</p>
+        <div class="popup-buttons">
+            <button class="btn-action btn-primary" onclick="hideFor2Hours()">Ẩn 2 giờ</button>
+            <button class="btn-action btn-secondary" onclick="closePopup()">Đóng</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
