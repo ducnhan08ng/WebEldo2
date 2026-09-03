@@ -1211,6 +1211,60 @@ function switchAccountTab(tab) {
     }
 }
 
+const ACCOUNT_CREDIT_SALE_MAP = { 1: 1, 5: 5, 10: 11, 20: 23, 50: 60 };
+
+function selectAccountCreditPackage(credits) {
+    const input = document.getElementById("accountCreditAmount");
+    if (input) input.value = credits;
+    updateAccountCreditPurchase();
+}
+
+function updateAccountCreditPurchase() {
+    const input = document.getElementById("accountCreditAmount");
+    const button = document.getElementById("accountCreditBuyBtn");
+    if (!input || !button) return;
+    let credits = Math.floor(Number(input.value));
+    if (!Number.isFinite(credits) || credits < 1) credits = 1;
+    credits = Math.min(100, credits);
+    input.value = credits;
+    const received = ACCOUNT_CREDIT_SALE_MAP[credits] || credits;
+    const saleText = received > credits ? ` + ${received - credits} sale` : "";
+    button.innerHTML = `<i class="fa-solid fa-cart-plus"></i> Mua ${credits} credit${saleText} (${(credits * 10000).toLocaleString("vi-VN")}đ)`;
+}
+
+async function buyAccountCredit() {
+    if (!currentUser) return openAuthModal("login");
+    const input = document.getElementById("accountCreditAmount");
+    const status = document.getElementById("accountCreditStatus");
+    const button = document.getElementById("accountCreditBuyBtn");
+    const credits = Math.min(100, Math.max(1, Math.floor(Number(input?.value || 1))));
+    if (!status || !button) return;
+    button.disabled = true;
+    status.className = "account-credit-status pending";
+    status.textContent = "Đang xử lý mua credit...";
+    try {
+        const res = await fetch("/api/account/buy-credit", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getAuthToken() },
+            body: JSON.stringify({ credits })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.message || "Không thể mua credit");
+        currentUser.balance = data.balance;
+        currentUser.credits = data.credits;
+        localStorage.setItem(AUTH_USER_KEY, JSON.stringify(currentUser));
+        updateTopNavUI();
+        status.className = "account-credit-status success";
+        status.textContent = data.message;
+    } catch (error) {
+        status.className = "account-credit-status error";
+        status.textContent = error.message || "Lỗi kết nối máy chủ";
+    } finally {
+        button.disabled = false;
+        updateAccountCreditPurchase();
+    }
+}
+
 // ── Nạp thẻ vào tài khoản ──
 let depositPollTimer = null;
 
