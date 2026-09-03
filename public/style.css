@@ -50,6 +50,126 @@ body {
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(59, 130, 246, 0.12);
 }
 
+/* ===== CREDIT BALANCE BANNER (ĐÃ THIẾT KẾ MỚI) ===== */
+.credit-balance-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: rgba(16, 185, 129, 0.08);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    margin-bottom: 16px;
+    text-align: left;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.credit-balance-banner:hover {
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.15);
+}
+
+/* Biến thể màu đỏ cho Túi Mù Ruby */
+.credit-balance-banner.banner-red {
+    background: rgba(239, 68, 68, 0.08) !important;
+    border-color: rgba(239, 68, 68, 0.35) !important;
+}
+
+.credit-balance-banner.banner-red:hover {
+    border-color: rgba(239, 68, 68, 0.6) !important;
+    box-shadow: 0 10px 28px rgba(239, 68, 68, 0.18) !important;
+}
+
+.banner-left {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.sub-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6ee7b7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.banner-red .sub-label {
+    color: #fca5a5 !important;
+}
+
+.credit-main-val {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.credit-main-val strong {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--accent-emerald);
+    line-height: 1;
+}
+
+.banner-red .credit-main-val strong {
+    color: #f87171 !important;
+}
+
+.credit-main-val .unit {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-emerald);
+}
+
+.banner-red .credit-main-val .unit {
+    color: #f87171 !important;
+}
+
+.credit-main-val small {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.btn-deposit-shortcut {
+    padding: 9px 15px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(90deg, #10b981, #059669);
+    color: #ffffff;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+    outline: none;
+}
+
+.btn-deposit-shortcut:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+}
+
+.btn-deposit-shortcut:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.btn-deposit-shortcut.btn-red {
+    background: linear-gradient(90deg, #ef4444, #dc2626) !important;
+    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3) !important;
+}
+
+.btn-deposit-shortcut.btn-red:hover {
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45) !important;
+}
+
 /* ===== LOGO & BRANDING ===== */
 .logo-section {
     margin-bottom: 22px;
@@ -85,7 +205,7 @@ h1 {
     line-height: 1.5;
 }
 
-/* ===== MODERN BUTTON INTERACTIONS ===== */
+/* ===== BUTTON INTERACTIONS ===== */
 .btn-action {
     width: 100%;
     padding: 13px 18px;
@@ -336,7 +456,7 @@ h1 {
     color: var(--accent-rose);
 }
 
-/* ===== PRICE GRID & CARDS ===== */
+/* ===== PRICE GRID ===== */
 .price-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -457,7 +577,7 @@ h1 {
     transform: scale(1.2);
 }
 
-/* ===== TOOLBOX & MYSTERY BOX HEADINGS ===== */
+/* ===== TOOLBOX HEADINGS ===== */
 .toolbox-heading {
     text-align: center;
     margin-bottom: 18px;
@@ -526,17 +646,7 @@ h1 {
     background: rgba(245, 158, 11, 0.08);
 }
 
-.toolbox-step.is-done {
-    border-color: var(--accent-emerald);
-    color: var(--accent-emerald);
-}
-
-.toolbox-step.is-error {
-    border-color: var(--accent-rose);
-    color: var(--accent-rose);
-}
-
-/* ===== MYSTERY GRID (3x3) ===== */
+/* ===== MYSTERY GRID ===== */
 .mystery-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -572,24 +682,6 @@ h1 {
 .mystery-box-item .box-inner i {
     font-size: 24px;
     color: #f87171;
-}
-
-.mystery-box-item.opening {
-    pointer-events: none;
-    animation: boxShake 0.6s ease-in-out;
-}
-
-@keyframes boxShake {
-    0%, 100% { transform: rotate(0deg); }
-    20% { transform: rotate(-8deg) scale(1.05); }
-    40% { transform: rotate(8deg) scale(1.05); }
-    60% { transform: rotate(-4deg); }
-    80% { transform: rotate(4deg); }
-}
-
-.mystery-box-item.opened {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: var(--accent-emerald);
 }
 
 /* ===== USER TOP BAR & AUTH UI ===== */
@@ -667,7 +759,7 @@ h1 {
     cursor: pointer;
 }
 
-/* ===== TOAST NOTIFICATION STYLES ===== */
+/* ===== TOAST NOTIFICATIONS ===== */
 .toast-container {
     position: fixed;
     top: 20px;
@@ -726,7 +818,6 @@ h1 {
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .flex-align-gap { display: flex; align-items: center; gap: 8px; }
 .warn-note { font-size: 11px; color: var(--accent-amber); margin-top: 4px; }
-.bonus-tag { font-size: 9px; color: var(--accent-amber); background: rgba(251, 191, 36, 0.15); padding: 1px 4px; border-radius: 4px; }
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 520px) {
@@ -737,129 +828,7 @@ h1 {
     .grid-2-btn { grid-template-columns: 1fr; }
     .user-top-bar { justify-content: center; }
 }
-/* ===== BANNER SỐ DƯ & LƯỢT MỞ (CREDIT BALANCE BANNER) ===== */
-.credit-balance-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 18px;
-    border-radius: 16px;
-    background: rgba(16, 185, 129, 0.08);
-    border: 1px solid rgba(16, 185, 129, 0.35);
-    margin-bottom: 16px;
-    text-align: left;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
 
-.credit-balance-banner:hover {
-    border-color: rgba(16, 185, 129, 0.55);
-    box-shadow: 0 10px 28px rgba(16, 185, 129, 0.15);
-}
-
-/* Phiên bản banner màu đỏ (Túi Mù / Mystery Box) */
-.credit-balance-banner.banner-red {
-    background: rgba(239, 68, 68, 0.08);
-    border-color: rgba(239, 68, 68, 0.35);
-}
-
-.credit-balance-banner.banner-red:hover {
-    border-color: rgba(239, 68, 68, 0.6);
-    box-shadow: 0 10px 28px rgba(239, 68, 68, 0.18);
-}
-
-.banner-left {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.sub-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #6ee7b7;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.banner-red .sub-label {
-    color: #fca5a5;
-}
-
-.credit-main-val {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.credit-main-val strong {
-    font-size: 22px;
-    font-weight: 800;
-    color: #10b981;
-    line-height: 1;
-}
-
-.banner-red .credit-main-val strong {
-    color: #f87171;
-}
-
-.credit-main-val .unit {
-    font-size: 13px;
-    font-weight: 700;
-    color: #10b981;
-}
-
-.banner-red .credit-main-val .unit {
-    color: #f87171;
-}
-
-.credit-main-val small {
-    font-size: 11.5px;
-    color: #94a3b8;
-    font-weight: 500;
-}
-
-/* Nút bấm Nạp / Mua thêm trong Banner */
-.btn-deposit-shortcut {
-    padding: 9px 15px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(90deg, #10b981, #059669);
-    color: #ffffff;
-    font-size: 12.5px;
-    font-weight: 700;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    white-space: nowrap;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
-    outline: none;
-}
-
-.btn-deposit-shortcut:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
-}
-
-.btn-deposit-shortcut:active {
-    transform: translateY(0) scale(0.97);
-}
-
-.btn-deposit-shortcut.btn-red {
-    background: linear-gradient(90deg, #ef4444, #dc2626);
-    box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
-}
-
-.btn-deposit-shortcut.btn-red:hover {
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
-}
-
-/* Co giãn responsive trên thiết bị di động nhỏ */
 @media (max-width: 420px) {
     .credit-balance-banner {
         flex-direction: column;
