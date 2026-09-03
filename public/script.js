@@ -5,229 +5,89 @@ if (!deviceId) {
     localStorage.setItem("deviceId", deviceId);
 }
 
-// ================= DỮ LIỆU BẢNG GIÁ (dạng card) =================
+// ================= TOAST SYSTEM (Thay thế alert/prompt) =================
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    
+    const icon = type === 'success' ? 'fa-circle-check' : type === 'error' ? 'fa-circle-xmark' : 'fa-circle-info';
+    toast.innerHTML = `<i class="fa-solid ${icon}" style="font-size: 16px;"></i> <span>${escapeHtml(message)}</span>`;
+    
+    container.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3200);
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+}
+
+// ================= DỮ LIỆU BẢNG GIÁ =================
 const ITEMS_PER_PAGE = 6;
 
 const PRICE_DATA = {
     elDorado: [
-        { name: "Key Tool Box El 5 Lần (Dùng Để Gửi Ruby và 7s)",       price: "50.000₫",     icon: "fa-solid fa-ticket",          color: "#f59e0b" },
-        { name: "Key Tool Box El 10 Lần (Dùng Để Gửi Ruby và 7s)",      price: "100.000₫",    icon: "fa-solid fa-ticket",          color: "#f59e0b" },
-        { name: "El Dorado Web Player ( AMO/LG/ATV/SSVN",      price: "699.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
-        { name: "El Dorado Manager 2026",      price: "200.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
-        { name: "Mây x500",                    price: "50.000₫",     icon: "fa-solid fa-cloud",           color: "#fbbf24" },
-        { name: "Mây x1200",                    price: "100.000₫",    icon: "fa-solid fa-cloud",            color: "#fbbf24" },
-        { name: "Ruby x10.000",                 price: "50.000₫",     icon: "fa-solid fa-gem",          color: "#fbbf24" },
-        { name: "Ruby x22.000",                price: "100.000₫",    icon: "fa-solid fa-gem",          color: "#fbbf24" },
-        { name: "Ruby x50.000",                price: "200.000₫",    icon: "fa-solid fa-gem",          color: "#fbbf24" },
-        { name: "x1 Item A",                   price: "50.000₫",     icon: "fa-solid fa-hammer",          color: "#fde68a" },
-        { name: "x3 Item A",                   price: "120.000₫",    icon: "fa-solid fa-hammer",          color: "#fde68a" },
-        { name: "x1 Random 7s Level 100",      price: "20.000₫",     icon: "fa-solid fa-user",          color: "#60a5fa" },
-        { name: "x3 Random 7s Level 100",      price: "50.000₫",     icon: "fa-solid fa-users",          color: "#a78bfa" },
-        { name: "x2 Random 8s Level 90",       price: "50.000₫",     icon: "fa-solid fa-user-plus",          color: "#f472b6" },
-        { name: "x5 Random 8s Level 90",       price: "120.000₫",    icon: "fa-solid fa-user-plus",          color: "#f472b6" },
-        { name: "x1 Tự Chọn 7s Level 100",     price: "50.000₫",     icon: "fa-solid fa-user",          color: "#10b981" },
-        { name: "x3 Tự Chọn 7s Level 100",     price: "100.000₫",    icon: "fa-solid fa-users",          color: "#059669" },
-        { name: "x1 Tự Chọn 8s Level 90",      price: "70.000₫",     icon: "fa-solid fa-user-plus",          color: "#f97316" },
-        { name: "x3 Tự Chọn 8s Level 90",      price: "200.000₫",    icon: "fa-solid fa-user-plus",          color: "#ea580c" },
+        { name: "Key Tool Box El 5 Lần",       price: "50.000₫",     icon: "fa-ticket",          color: "#f59e0b" },
+        { name: "Key Tool Box El 10 Lần",      price: "100.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
+        { name: "Key Tool Box El 30 Lần",      price: "200.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
+        { name: "Key Tool Box El 50 Lần",      price: "300.000₫",    icon: "fa-ticket",          color: "#f59e0b" },
+        { name: "Ruby x4.000",                 price: "50.000₫",     icon: "fa-gem",             color: "#fbbf24" },
+        { name: "Ruby x10.000",                price: "100.000₫",    icon: "fa-gem",             color: "#fbbf24" },
+        { name: "x1 Item A",                   price: "50.000₫",     icon: "fa-hammer",          color: "#fde68a" },
+        { name: "x3 Item A",                   price: "120.000₫",    icon: "fa-hammer",          color: "#fde68a" },
+        { name: "x1 Random 7s Level 100",      price: "20.000₫",     icon: "fa-user",            color: "#60a5fa" },
+        { name: "x3 Random 7s Level 100",      price: "60.000₫",     icon: "fa-users",           color: "#a78bfa" },
+        { name: "x1 Tự Chọn 7s Level 100",     price: "50.000₫",     icon: "fa-user",            color: "#10b981" },
+        { name: "x3 Tự Chọn 7s Level 100",     price: "100.000₫",    icon: "fa-users",           color: "#059669" },
     ],
     gtd: [
-        { name: "GTD Web Player ( AMO/ATV/LG/SSVN )",       price: "1.199.000₫",      icon: "fa-bolt",          color: "#3b82f6" },
-        { name: "x100.000 Vỏ Sò",      price: "100.000₫",     icon: "fa-bolt",          color: "#3b82f6" },
-        { name: "x1.000 Magic",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
-        { name: "x10.000 Ruby",        price: "100.000₫",     icon: "fa-bolt",          color: "#60a5fa" },
+        { name: "x50.000 Vỏ Sò",       price: "50.000₫",      icon: "fa-bolt",           color: "#3b82f6" },
+        { name: "x120.000 Vỏ Sò",      price: "100.000₫",     icon: "fa-bolt",           color: "#3b82f6" },
+        { name: "x1.000 Magic",        price: "100.000₫",     icon: "fa-bolt",           color: "#60a5fa" },
+        { name: "x10.000 Ruby",        price: "100.000₫",     icon: "fa-bolt",           color: "#60a5fa" },
         { name: "100.000 Diamond",     price: "100.000₫",     icon: "fa-bolt",           color: "#2563eb" },
-        { name: "Hero Loki/Hell 150 Souls",     price: "150.000₫",     icon: "fa-bolt",           color: "#2563eb" },
-    ]   
+    ]
 };
 
 let elDoradoPage = 1;
 let gtdPage = 1;
 
-// ================= NHÁNH MÔ TẢ SẢN PHẨM ===============
-const ELDO_PRODUCT_BRANCH = {
-    webPlayer: {
-        name: "ElDo Web Player",
-        icon: "fa-solid fa-display",
-        color: "#38bdf8",
-        description: "Cổng web chạy/hiển thị game El Dorado trực tiếp, giúp người dùng thao tác nhanh hơn trên trình duyệt."
-    },
-    manager: {
-        name: "Manager",
-        icon: "fa-solid fa-gear",
-        color: "#a78bfa",
-        description: "Bộ quản lý key, lượt dùng, lịch sử log, và theo dõi trạng thái tài khoản/tool cho admin."
-    }
-};
-
-const PRODUCT_CATALOG = [
-    {
-        id: "web-player",
-        name: "El Dorado Web Player",
-        price: "Từ 699.000đ",
-        icon: "fa-solid fa-display",
-        color: "#38bdf8",
-        summary: "Bản Log Acc El Dorado Hỗ Trợ 4 Server AMO/ATV/LG/SSVN, truy cập nhanh trên trình duyệt.",
-        description: "Bản log web cực vip tin dùng bởi các hacker của game, dùng mượt mà, có thể chỉnh game tùy ý, log mọi account!",
-        features: [
-            "Hỗ Trợ Trọn Đời",
-            "Giao diện đơn giản và dễ dùng",
-            "Tối ưu trải nghiệm game và thao tác",
-            "Trải nghiệm mod/hacks miễn phí"
-        ],
-        discordUrl: "https://discord.com/users/chosenone_3667",
-        facebookUrl: "https://www.facebook.com/minh.hung.63491"
-    },
-    {
-        id: "web-player-2",
-        name: "Gold Tower Defence Web Player",
-        price: "Từ 1.199.000đ",
-        icon: "fa-solid fa-display",
-        color: "#38bdf8",
-        summary: "Bản Log Acc GTD Hỗ Trợ 4 Server AMO/ATV/LG/SSVN, truy cập nhanh trên trình duyệt.",
-        description: "ElDo Web Player là giải pháp truy cập game trên nền web, tối ưu cho người dùng muốn mở ngay mà không cần cấu hình phức tạp. Hỗ trợ thao tác nhanh, tối ưu hiển thị và tương thích tốt với các nền tảng phổ biến.",
-        features: [
-            "Hỗ Trợ Trọn Đời",
-            "Giao diện đơn giản và dễ dùng",
-            "Tối ưu trải nghiệm game và thao tác",
-            "Trải nghiệm mod/hacks miễn phí"
-        ],
-        discordUrl: "https://discord.com/users/chosenone_3667",
-        facebookUrl: "https://www.facebook.com/minh.hung.63491"
-    },
-    {
-        id: "manager",
-        name: "El Dorado Manager 2026",
-        price: "Từ 200.000đ",
-        icon: "fa-solid fa-gear",
-        color: "#a78bfa",
-        summary: "Bản Mod/Hack Cho ElDorado M, Trải Nghiệm Full Cập Nhật Mới Nhất!",
-        description: "Mod/Hack Vô Hạn Ruby, Mây, Full Thần Nạp, Nâng Cấp Level 160, Full 9 Sao và 8 Sao, Anti Ban 100%, Hỗ Trợ PVP, Boss, CloudGarden",
-        features: [
-            "Hỗ Trợ Trọn Đời Đến Khi Game Sập",
-            "Cập nhật tính năng mới liên tục",
-            "Trải Nghiệm Tinh Hoa Của Game",
-            "Hỗ Trợ PVP, Boss, CloudGarden"
-        ],
-        discordUrl: "https://discord.com/users/chosenone_3667",
-        facebookUrl: "https://www.facebook.com/minh.hung.63491"
-    },
-    {
-        id: "toolbox",
-        name: "Toolbox El Dorado",
-        price: "Từ 20.000đ / lượt",
-        icon: "fa-solid fa-bolt",
-        color: "#f59e0b",
-        summary: "Công cụ gửi Ruby, 7s, quản lý tài khoản nhanh và an toàn trên web.",
-        description: "Toolbox El Dorado hỗ trợ người dùng thực hiện các tác vụ nhanh như gửi Ruby, gửi 7s và xử lý bằng license key. Dễ sử dụng và phù hợp với cả người mới lẫn người dùng có kinh nghiệm.",
-        features: [
-            "Gửi Ruby nhanh và tự động",
-            "Tiện Lợi và An Toàn",
-            "Dùng qua license key và tracking rõ ràng",
-            "Phù hợp cho user và admin"
-        ],
-        discordUrl: "https://discord.com/users/chosenone_3667",
-        facebookUrl: "https://www.facebook.com/minh.hung.63491"
-    }
-];
-
-function renderProductCards() {
-    const container = document.getElementById("productList");
-    if (!container) return;
-
-    container.innerHTML = PRODUCT_CATALOG.map(product => `
-        <div class="product-card">
-            <div class="product-card-top">
-                <div class="product-card-icon" style="background:${product.color};">
-                    <i class="${product.icon}"></i>
-                </div>
-                <div class="product-card-meta">
-                    <div class="product-card-name">${product.name}</div>
-                    <div class="product-card-price">${product.price}</div>
-                </div>
-            </div>
-            <div class="product-card-summary">${product.summary}</div>
-            <div class="product-card-actions">
-                <button class="product-detail-btn" type="button" onclick="openProductDetail('${product.id}')">Xem chi tiết</button>
-                <a class="product-btn" href="${product.discordUrl}" target="_blank" rel="noopener noreferrer">
-                    <i class="fa-brands fa-discord"></i> Mua Discord
-                </a>
-            </div>
-        </div>
-    `).join("");
-}
-
-function openProductDetail(productId) {
-    const product = PRODUCT_CATALOG.find(item => item.id === productId);
-    const modal = document.getElementById("productDetailModal");
-    const header = document.getElementById("productDetailHeader");
-    const body = document.getElementById("productDetailBody");
-    const discordBtn = document.getElementById("productDiscordBtn");
-    const facebookBtn = document.getElementById("productFacebookBtn");
-
-    if (!product || !modal || !header || !body || !discordBtn || !facebookBtn) return;
-
-    header.innerHTML = `
-        <div class="product-detail-icon" style="background:${product.color};">
-            <i class="${product.icon}"></i>
-        </div>
-        <div>
-            <div class="product-detail-name">${product.name}</div>
-            <div class="product-detail-price">${product.price}</div>
-        </div>
-    `;
-
-    body.innerHTML = `
-        <p>${product.description}</p>
-        <ul>
-            ${product.features.map(feature => `<li>${feature}</li>`).join("")}
-        </ul>
-    `;
-
-    discordBtn.href = product.discordUrl;
-    facebookBtn.href = product.facebookUrl;
-    modal.style.display = "flex";
-}
-
-function closeProductDetail() {
-    const modal = document.getElementById("productDetailModal");
-    if (modal) modal.style.display = "none";
-}
-
-// ================= RENDER BẢNG GIÁ CÓ PHÂN TRANG (dạng card) =================
+// ================= RENDER BẢNG GIÁ =================
 function renderPriceGrid(data, page, gridId, paginationId, type) {
     const grid = document.getElementById(gridId);
     const pagination = document.getElementById(paginationId);
+    if (!grid || !pagination) return;
+
     const totalPages = Math.max(1, Math.ceil(data.length / ITEMS_PER_PAGE));
     if (page > totalPages) page = totalPages;
     if (page < 1) page = 1;
 
     const start = (page - 1) * ITEMS_PER_PAGE;
-    const end = start + ITEMS_PER_PAGE;
-    const items = data.slice(start, end);
+    const items = data.slice(start, start + ITEMS_PER_PAGE);
 
     if (!items.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:#64748b;">Không có dữ liệu</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:var(--text-muted);">Không có dữ liệu</div>`;
     } else {
         grid.innerHTML = items.map(item => {
-            const r = parseInt(item.color.slice(1,3), 16);
-            const g = parseInt(item.color.slice(3,5), 16);
-            const b = parseInt(item.color.slice(5,7), 16);
-            const bg = `rgba(${r},${g},${b},0.12)`;
-            const glow = `rgba(${r},${g},${b},0.18)`;
+            const isAutoKey = item.name.toLowerCase().includes("key tool box") || item.name.toLowerCase().includes("license");
             return `
-                <div class="price-card" style="--accent:${item.color};--accent-bg:${bg};--accent-glow:${glow};">
-                <div class="price-card-icon"><i class="fa-solid ${item.icon}"></i></div>
-                    <div class="price-card-name">${item.name}</div>
+                <div class="price-card" style="--accent:${item.color};">
+                    <div class="price-card-icon"><i class="fa-solid ${item.icon}"></i></div>
+                    <div class="price-card-name">${escapeHtml(item.name)}</div>
                     <div class="price-card-price">${item.price}</div>
-                    <button class="price-card-btn" onclick="contactBuy('${item.name}', '${item.price}')">
-                        <i class="fa-brands fa-discord"></i> Mua
+                    <button class="price-card-btn" onclick="handlePriceBuy('${item.name.replace(/'/g, "\\'")}', '${item.price}')">
+                        ${isAutoKey ? '<i class="fa-solid fa-bolt"></i> Mua Tự Động' : '<i class="fa-brands fa-discord"></i> Mua'}
                     </button>
                 </div>
             `;
         }).join('');
     }
 
-    // Pagination
     let dotsHTML = '';
     for (let i = 1; i <= totalPages; i++) {
         dotsHTML += `<div class="page-dot ${i === page ? 'active' : ''}" onclick="goToPage('${type}', ${i})"></div>`;
@@ -265,195 +125,117 @@ function goToPage(type, page) {
     }
 }
 
-// ================= LIÊN HỆ MUA HÀNG (mở Discord) =================
-function contactBuy(name, price) {
-    window.open("https://discord.com/users/chosenone_3667", "_blank");
+function handlePriceBuy(name, price) {
+    const lowerName = (name || "").toLowerCase();
+    if (lowerName.includes("key tool box") || lowerName.includes("license")) {
+        closePrice(); closeGTDPrice();
+        openBuyKeyModal();
+        if (lowerName.includes("5 lần") || price.includes("50.000")) selectCreditPackage(5);
+        else if (lowerName.includes("10 lần") || price.includes("100.000")) selectCreditPackage(10);
+        else if (lowerName.includes("30 lần") || price.includes("200.000")) selectCreditPackage(20);
+        else if (lowerName.includes("50 lần") || price.includes("300.000")) selectCreditPackage(30);
+        else selectCreditPackage(1);
+        return;
+    }
+    window.open("https://discord.com/users/1201014400350429284", "_blank");
 }
 
 // ================= NHẬN MÃ =================
-function createDemoCode() {
-    const alpha = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "ELD-";
-    for (let i = 0; i < 6; i++) {
-        code += alpha[Math.floor(Math.random() * alpha.length)];
-    }
-    return code;
-}
-
 function getReward() {
-    const btn = document.querySelector('button[onclick="getReward()"]');
+    if (window.__DEVTOOLS_BLOCKED__) return;
+    const btn = document.getElementById("btnGetReward");
     if (!btn) return;
+    
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo...</span>';
-
-    const fallback = () => {
-        const demoCode = createDemoCode();
-        document.getElementById("code").innerText = demoCode;
-        document.getElementById("userCodeInput").value = demoCode;
-        document.getElementById("codeInputSection").style.display = "block";
-        btn.style.display = "none";
-    };
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang tạo mã...</span>';
 
     fetch("/generate-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deviceId })
     })
-    .then(async res => {
-        const text = await res.text();
-        if (!text) return fallback();
-        try {
-            const data = JSON.parse(text);
-            if (data.success) {
-                document.getElementById("code").innerText = data.code;
-                document.getElementById("userCodeInput").value = data.code;
-                document.getElementById("codeInputSection").style.display = "block";
-                btn.style.display = "none";
-                return;
-            }
-            if (data.code) {
-                document.getElementById("code").innerText = data.code;
-                document.getElementById("userCodeInput").value = data.code;
-                document.getElementById("codeInputSection").style.display = "block";
-                btn.style.display = "none";
-                return;
-            }
-            fallback();
-        } catch {
-            fallback();
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById("code").innerText = data.code;
+            document.getElementById("userCodeInput").value = data.code;
+            document.getElementById("codeInputSection").style.display = "block";
+            btn.style.display = "none";
+            showToast("Đã tạo mã thành công!", "success");
+        } else {
+            showToast(data.message || "Không thể tạo mã", "error");
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-gift"></i> <span>Nhận Mã</span>';
         }
     })
-    .catch(() => fallback());
+    .catch(err => {
+        showToast("Lỗi kết nối: " + err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-gift"></i> <span>Nhận Mã</span>';
+    });
 }
 
-// ================= GỬI CODE =================
 function submitCode() {
     const userId = document.getElementById("userIdInput").value.trim();
     const platform = document.getElementById("platformSelect").value;
     const userCode = document.getElementById("userCodeInput").value.trim();
     const displayedCode = document.getElementById("code").innerText;
-    const statusEl = document.getElementById("submitStatus");
     const lucyAnswer = document.getElementById("lucyAnswerInput").value.trim();
     const rubyAnswer = document.getElementById("rubyAnswerInput").value.trim();
 
-    const showError = (msg) => {
-        statusEl.innerText = msg;
-        statusEl.className = "submit-status error";
-    };
+    if (!userId) return showToast("Vui lòng nhập ID!", "error");
+    if (!platform) return showToast("Vui lòng chọn nền tảng!", "error");
+    if (!userCode) return showToast("Vui lòng nhập mã!", "error");
+    if (!lucyAnswer) return showToast("Vui lòng trả lời câu hỏi Lâu Đài!", "error");
+    if (!rubyAnswer) return showToast("Vui lòng trả lời số lượng Ruby!", "error");
 
-    if (!userId) return showError("❌ Vui lòng nhập ID!");
-    if (!platform) return showError("❌ Vui lòng chọn nền tảng!");
-    if (!userCode) return showError("❌ Vui lòng nhập mã!");
-    if (!lucyAnswer) return showError("❌ Vui lòng trả lời số lượng Lucy!");
-    if (!rubyAnswer) return showError("❌ Vui lòng trả lời số lượng Ruby!");
+    const btn = document.getElementById("btnSubmitCode");
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang gửi...</span>';
 
     fetch("/submit-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             deviceId, userId, platform,
-            userInputCode: userCode,
-            systemCode: displayedCode,
-            lucyAnswer, rubyAnswer,
-            timestamp: new Date().toISOString()
+            userInputCode: userCode, systemCode: displayedCode,
+            lucyAnswer, rubyAnswer, timestamp: new Date().toISOString()
         })
     })
-    .then(async res => {
-        const text = await res.text();
-        if (!text) {
-            statusEl.innerText = "✅ Thành công!";
-            statusEl.className = "submit-status success";
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast("Gửi mã thành công!", "success");
             document.getElementById("userIdInput").value = "";
             document.getElementById("platformSelect").value = "";
             document.getElementById("userCodeInput").value = "";
             document.getElementById("lucyAnswerInput").value = "";
             document.getElementById("rubyAnswerInput").value = "";
-            return;
-        }
-        try {
-            const data = JSON.parse(text);
-            if (data.success) {
-                statusEl.innerText = "✅ Thành công!";
-                statusEl.className = "submit-status success";
-                document.getElementById("userIdInput").value = "";
-                document.getElementById("platformSelect").value = "";
-                document.getElementById("userCodeInput").value = "";
-                document.getElementById("lucyAnswerInput").value = "";
-                document.getElementById("rubyAnswerInput").value = "";
-            } else {
-                showError("❌ " + (data.message || "Gửi thông tin thất bại."));
-            }
-        } catch {
-            statusEl.innerText = "✅ Thành công!";
-            statusEl.className = "submit-status success";
-            document.getElementById("userIdInput").value = "";
-            document.getElementById("platformSelect").value = "";
-            document.getElementById("userCodeInput").value = "";
-            document.getElementById("lucyAnswerInput").value = "";
-            document.getElementById("rubyAnswerInput").value = "";
+        } else {
+            showToast(data.message || "Gửi thất bại", "error");
         }
     })
-    .catch(() => {
-        statusEl.innerText = "✅ Thành công!";
-        statusEl.className = "submit-status success";
-        document.getElementById("userIdInput").value = "";
-        document.getElementById("platformSelect").value = "";
-        document.getElementById("userCodeInput").value = "";
-        document.getElementById("lucyAnswerInput").value = "";
-        document.getElementById("rubyAnswerInput").value = "";
+    .catch(err => showToast("Lỗi: " + err.message, "error"))
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Gửi Mã</span>';
     });
 }
 
-// ================= POPUP BẢNG GIÁ & SHOP =================
+// ================= MODAL OPEN/CLOSE =================
 function openPrice() {
     elDoradoPage = 1;
     renderPriceGrid(PRICE_DATA.elDorado, elDoradoPage, 'priceGrid', 'pricePagination', 'elDorado');
-    const modal = document.getElementById("priceModal");
-    if (modal) {
-        modal.style.display = "flex";
-        requestAnimationFrame(() => modal.classList.add("is-open"));
-    }
+    document.getElementById("priceModal").style.display = "flex";
 }
-function closePrice() {
-    const modal = document.getElementById("priceModal");
-    if (modal) {
-        modal.classList.remove("is-open");
-        modal.style.display = "none";
-    }
-}
+function closePrice() { document.getElementById("priceModal").style.display = "none"; }
 
 function openGTDPrice() {
     gtdPage = 1;
     renderPriceGrid(PRICE_DATA.gtd, gtdPage, 'gtdPriceGrid', 'gtdPricePagination', 'gtd');
-    const modal = document.getElementById("gtdPriceModal");
-    if (modal) {
-        modal.style.display = "flex";
-        requestAnimationFrame(() => modal.classList.add("is-open"));
-    }
+    document.getElementById("gtdPriceModal").style.display = "flex";
 }
-function closeGTDPrice() {
-    const modal = document.getElementById("gtdPriceModal");
-    if (modal) {
-        modal.classList.remove("is-open");
-        modal.style.display = "none";
-    }
-}
-
-function openShop() {
-    const modal = document.getElementById("shopModal");
-    if (modal) {
-        modal.style.display = "flex";
-        requestAnimationFrame(() => modal.classList.add("is-open"));
-    }
-    loadShop();
-}
-function closeShop() {
-    const modal = document.getElementById("shopModal");
-    if (modal) {
-        modal.classList.remove("is-open");
-        modal.style.display = "none";
-    }
-}
+function closeGTDPrice() { document.getElementById("gtdPriceModal").style.display = "none"; }
 
 // ================= TOOLBOX EL DORADO =================
 const EL_DORADO_HWID_KEY = "elDoradoToolboxHwid";
@@ -462,10 +244,7 @@ const EL_DORADO_CHARACTER_IDS = new Set([63, 66, 67, 68, 49, 50, 64, 65, 48, 56,
 function getElDoradoHwid() {
     let hwid = localStorage.getItem(EL_DORADO_HWID_KEY);
     if (!hwid) {
-        const randomPart = window.crypto && typeof window.crypto.randomUUID === "function"
-            ? window.crypto.randomUUID()
-            : Math.random().toString(36).slice(2) + Date.now().toString(36);
-        hwid = `WEB-EL-${randomPart}`;
+        hwid = `WEB-EL-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
         localStorage.setItem(EL_DORADO_HWID_KEY, hwid);
     }
     return hwid;
@@ -475,33 +254,23 @@ function openElDoradoToolbox() {
     setElDoradoStatus("");
     updateElDoradoToolboxMode();
     resetToolboxSteps();
-    const modal = document.getElementById("elDoradoToolboxModal");
-    if (modal) {
-        modal.style.display = "flex";
-        requestAnimationFrame(() => modal.classList.add("is-open"));
-    }
+    document.getElementById("elDoradoToolboxModal").style.display = "flex";
 }
 
 function closeElDoradoToolbox() {
-    const modal = document.getElementById("elDoradoToolboxModal");
-    if (modal) {
-        modal.classList.remove("is-open");
-        modal.style.display = "none";
-    }
+    document.getElementById("elDoradoToolboxModal").style.display = "none";
 }
 
 function setElDoradoStatus(message, type = "") {
     const status = document.getElementById("elDoradoToolboxStatus");
+    if (!status) return;
     status.textContent = message;
     status.className = `toolbox-status${type ? ` is-${type}` : ""}`;
 }
 
-// Quản lý progress steps
 function resetToolboxSteps() {
     ["step1", "step2", "step3", "step4"].forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.classList.remove("is-active", "is-done", "is-error");
+        document.getElementById(id)?.classList.remove("is-active", "is-done", "is-error");
     });
     document.getElementById("step1")?.classList.add("is-active");
 }
@@ -513,104 +282,21 @@ function setToolboxStep(stepNum, state) {
     if (state) step.classList.add("is-" + state);
 }
 
-// Hiển thị/ẩn email theo platform
-function setupPlatformListener() {
-    const platformSelect = document.getElementById("elPlatformSelect");
-    if (!platformSelect) return;
-    platformSelect.addEventListener("change", function() {
-        const emailGroup = document.getElementById("elEmailGroup");
-        const emailInput = document.getElementById("elEmailInput");
-        if (this.value === "ATV") {
-            emailGroup.style.display = "block";
-            emailInput.required = true;
-        } else {
-            emailGroup.style.display = "none";
-            emailInput.required = false;
-            emailInput.value = "";
-        }
-    });
-}
-
 function updateElDoradoToolboxMode() {
     const action = document.getElementById("elToolboxActionSelect")?.value || "ruby";
     const isFeature13 = action === "feature13";
     const isFeature11 = action === "feature11";
     const isCharacterFeature = isFeature11 || isFeature13;
+
     const rubyGroup = document.getElementById("elRubyAmountGroup");
-    const rubyInput = document.getElementById("elRubyAmountInput");
-    const characterIdInput = document.getElementById("elCharacterIdInput");
-    const characterLevelInput = document.getElementById("elCharacterLevelInput");
-    const characterMaxLevelInput = document.getElementById("elCharacterMaxLevelInput");
-    const submitButton = document.getElementById("elDoradoSubmitBtn");
+    if (rubyGroup) rubyGroup.style.display = isCharacterFeature ? "none" : "";
+
+    document.querySelectorAll("[data-el-feature13]").forEach(el => el.style.display = isFeature13 ? "" : "none");
+    document.querySelectorAll("[data-el-character-feature]").forEach(el => el.style.display = isCharacterFeature ? "" : "none");
+
     const sendLabel = document.getElementById("elStepSendLabel");
-
-    if (rubyGroup) {
-        rubyGroup.hidden = isCharacterFeature;
-        rubyGroup.style.display = isCharacterFeature ? "none" : "";
-    }
-    document.querySelectorAll("[data-el-feature13]").forEach(element => {
-        element.hidden = !isFeature13;
-        element.style.display = isFeature13 ? "" : "none";
-    });
-    document.querySelectorAll("[data-el-character-feature]").forEach(element => {
-        element.hidden = !isCharacterFeature;
-        element.style.display = isCharacterFeature ? "" : "none";
-    });
-
-    if (rubyInput) rubyInput.required = !isCharacterFeature;
-    if (characterIdInput) characterIdInput.required = isFeature13;
-    if (characterLevelInput) characterLevelInput.required = isCharacterFeature;
-    if (characterMaxLevelInput) characterMaxLevelInput.required = isCharacterFeature;
-
-    // Đảm bảo level và max level luôn là 100 và readonly
-    if (characterLevelInput) {
-        characterLevelInput.value = 100;
-        characterLevelInput.readOnly = true;
-    }
-    if (characterMaxLevelInput) {
-        characterMaxLevelInput.value = 100;
-        characterMaxLevelInput.readOnly = true;
-    }
-
     if (sendLabel) {
-        sendLabel.textContent = isFeature13
-            ? "Gửi 7s (5 lượt)"
-            : isFeature11
-                ? "Random 7s (2 lượt)"
-                : "Bắt đầu gửi Ruby (1 lượt)";
-    }
-    if (submitButton && !submitButton.disabled) {
-        submitButton.innerHTML = `<i class="fa-solid fa-play"></i> <span id="elStepSendLabel">${
-            isFeature13 ? "Gửi 7s (5 lượt)" : isFeature11 ? "Random 7s (2 lượt)" : "Bắt đầu gửi Ruby (1 lượt)"
-        }</span>`;
-    }
-}
-
-async function runElDoradoToolbox(payload) {
-    try {
-        const response = await fetch("/api/el-dorado/toolbox", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-
-        let data;
-        try {
-            data = await response.json();
-        } catch {
-            throw new Error(response.ok ? "Server trả về dữ liệu không hợp lệ" : "Không thể kết nối tới server");
-        }
-
-        if (!response.ok || !data.success) {
-            throw new Error(data?.message || "Server xử lý thất bại");
-        }
-
-        return data;
-    } catch (err) {
-        return {
-            success: false,
-            message: err?.message || "Không thể xử lý yêu cầu từ server"
-        };
+        sendLabel.textContent = isFeature13 ? "Gửi 7s (5 lượt)" : isFeature11 ? "Random 7s (2 lượt)" : "Bắt đầu gửi Ruby (1 lượt)";
     }
 }
 
@@ -626,955 +312,241 @@ async function submitElDoradoToolbox(event) {
     const isCharacterFeature = isFeature11 || isFeature13;
     const rubyAmount = Number(document.getElementById("elRubyAmountInput").value);
     const characterId = Number(document.getElementById("elCharacterIdInput").value);
-    const characterLevel = Number(document.getElementById("elCharacterLevelInput").value);
-    const characterMaxLevel = Number(document.getElementById("elCharacterMaxLevelInput").value);
     const key = document.getElementById("elLicenseKeyInput").value.trim().toUpperCase();
-    const submitButton = document.getElementById("elDoradoSubmitBtn");
-    const email = document.getElementById("elEmailInput").value.trim();
+    const submitBtn = document.getElementById("elDoradoSubmitBtn");
 
-    // Validate
     if (!hostId) return setElDoradoStatus("Vui lòng nhập ID.", "error");
     if (!platform) return setElDoradoStatus("Vui lòng chọn Platform.", "error");
-    if (platform === "ATV") {
-        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return setElDoradoStatus("Vui lòng nhập email hợp lệ cho nền tảng ATV.", "error");
-        }
+    if (action === "ruby" && (!Number.isInteger(rubyAmount) || rubyAmount < 1 || rubyAmount > 5000)) {
+        return setElDoradoStatus("Số Ruby phải từ 1 đến 5.000.", "error");
     }
-    if (action === "ruby" && (!Number.isInteger(rubyAmount) || rubyAmount < 1 || rubyAmount > 10000)) {
-        return setElDoradoStatus("Số Ruby phải là số nguyên từ 1 đến 10.000.", "error");
-    }
-    if (isCharacterFeature) {
-        if (isFeature13 && !EL_DORADO_CHARACTER_IDS.has(characterId)) {
-            return setElDoradoStatus("Nhân vật không nằm trong danh sách 14 nhân vật được hỗ trợ.", "error");
-        }
-        if (!Number.isInteger(characterLevel) || characterLevel < 1 || characterLevel > 100) {
-            return setElDoradoStatus("Level nhân vật phải từ 1 đến 100.", "error");
-        }
-        if (!Number.isInteger(characterMaxLevel) || characterMaxLevel < 1 || characterMaxLevel > 101) {
-            return setElDoradoStatus("Max Level phải từ 1 đến 100.", "error");
-        }
+    if (isFeature13 && !EL_DORADO_CHARACTER_IDS.has(characterId)) {
+        return setElDoradoStatus("Nhân vật không thuộc danh sách hỗ trợ.", "error");
     }
     if (!key) return setElDoradoStatus("Vui lòng nhập License Key.", "error");
 
-    const hwid = getElDoradoHwid();
-
-    submitButton.disabled = true;
-    submitButton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang xử lý...</span>';
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Đang xử lý...</span>';
 
     try {
-        setToolboxStep(1, "done");
-        setToolboxStep(2, "active");
-        setElDoradoStatus("Server đang xác thực và xử lý dữ liệu bảo mật...", "loading");
+        setToolboxStep(1, "done"); setToolboxStep(2, "active");
+        setElDoradoStatus("Đang xác thực bảo mật...", "loading");
 
-        const payload = {
-            key, hwid, accountId: hostId, platform, userKey, action
-        };
-        if (platform === "ATV") payload.email = email;
+        const payload = { key, hwid: getElDoradoHwid(), accountId: hostId, platform, userKey, action };
         if (isCharacterFeature) {
-            payload.characterLevel = characterLevel;
-            payload.characterMaxLevel = characterMaxLevel;
+            payload.characterLevel = 100; payload.characterMaxLevel = 100;
             if (isFeature13) payload.characterId = characterId;
         } else {
             payload.amount = rubyAmount;
         }
 
-        await new Promise(r => setTimeout(r, 800));
-        setToolboxStep(2, "done");
-        setToolboxStep(3, "active");
+        const response = await fetch("/api/el-dorado/toolbox", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        const data = await response.json();
 
-        const result = await runElDoradoToolbox(payload);
+        if (!response.ok || !data.success) throw new Error(data.message || "Xử lý thất bại");
 
-        if (!result?.success) {
-            throw new Error(result?.message || "Server xử lý thất bại");
-        }
-
-        setToolboxStep(3, "done");
-        setToolboxStep(4, "done");
-
-        const remainingText = Number.isFinite(Number(result.remaining))
-            ? ` Còn ${Number(result.remaining)} lượt sử dụng.`
-            : "";
-        const characterLabel = result.characterName
-            ? `${result.characterName} (${result.characterId})`
-            : `ID ${result.characterId || characterId}`;
-        const successMessage = isFeature13
-            ? `✅ Gửi 7s thành công: ${characterLabel} đã được gửi (đã trừ 5 lượt).${remainingText}`
-            : isFeature11
-                ? `✅ Random 7s thành công: ${characterLabel} đã được gửi (đã trừ 2 lượt).${remainingText}`
-                : `✅ Đã gửi ${rubyAmount.toLocaleString("vi-VN")} Ruby thành công (đã trừ 1 lượt).${remainingText}`;
-        setElDoradoStatus(successMessage, "success");
-    } catch (error) {
+        setToolboxStep(2, "done"); setToolboxStep(3, "done"); setToolboxStep(4, "done");
+        setElDoradoStatus("Thao tác thành công! " + (data.remaining ? `Còn ${data.remaining} lượt.` : ""), "success");
+        showToast("Thao tác thành công!", "success");
+    } catch (err) {
         setToolboxStep(2, "error");
-        setElDoradoStatus(`❌ ${error.message}`, "error");
+        setElDoradoStatus("Lỗi: " + err.message, "error");
+        showToast(err.message, "error");
     } finally {
-        submitButton.disabled = false;
+        submitBtn.disabled = false;
         updateElDoradoToolboxMode();
     }
 }
 
-// ================= ĐÓNG MODAL KHI CLICK NỀN =================
-window.addEventListener("click", function(e) {
+// ================= AUTH SESSION =================
+const AUTH_TOKEN_KEY = "rubyfree_user_token";
+const AUTH_USER_KEY = "rubyfree_user_cached";
+let currentUser = null;
+
+function getAuthToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY) || "";
+}
+
+function setAuthToken(token, userObj = null) {
+    if (token) {
+        localStorage.setItem(AUTH_TOKEN_KEY, token);
+        if (userObj) localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userObj));
+    } else {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        localStorage.removeItem(AUTH_USER_KEY);
+    }
+}
+
+function initAuthSession() {
+    const token = getAuthToken();
+    if (!token) { updateTopNavUI(); return; }
+
+    try {
+        const cached = localStorage.getItem(AUTH_USER_KEY);
+        if (cached) { currentUser = JSON.parse(cached); updateTopNavUI(); }
+    } catch (e) {}
+    checkAuthStatus();
+}
+
+async function checkAuthStatus() {
+    const token = getAuthToken();
+    if (!token) return;
+
+    try {
+        const res = await fetch("/api/auth/me", { headers: { "Authorization": "Bearer " + token } });
+        const data = await res.json();
+        if (data.success && data.user) {
+            currentUser = data.user;
+            localStorage.setItem(AUTH_USER_KEY, JSON.stringify(data.user));
+            updateTopNavUI();
+        } else if (res.status === 401 || res.status === 403) {
+            setAuthToken(""); currentUser = null; updateTopNavUI();
+        }
+    } catch (e) {}
+}
+
+function updateTopNavUI() {
+    const guestNav = document.getElementById("guestNav");
+    const userNav = document.getElementById("userNav");
+
+    if (currentUser) {
+        if (guestNav) guestNav.style.display = "none";
+        if (userNav) userNav.style.display = "flex";
+        document.getElementById("userDisplayName").textContent = currentUser.username || "USER";
+        
+        const balance = Number(currentUser.balance || 0);
+        const credits = Number(currentUser.credits ?? Math.floor(balance / 10000));
+        
+        document.getElementById("userBalanceText").textContent = balance.toLocaleString("vi-VN") + "đ";
+        document.getElementById("userCreditsText").textContent = credits + " credit";
+        document.getElementById("buyKeyCurrentCredits").textContent = credits;
+    } else {
+        if (guestNav) guestNav.style.display = "flex";
+        if (userNav) userNav.style.display = "none";
+    }
+}
+
+function openAuthModal(tab = "login") {
+    document.getElementById("authModal").style.display = "flex";
+    switchAuthTab(tab);
+}
+function closeAuthModal() { document.getElementById("authModal").style.display = "none"; }
+
+function switchAuthTab(tab) {
+    document.getElementById("tabBtnLogin")?.classList.toggle("is-active", tab === "login");
+    document.getElementById("tabBtnRegister")?.classList.toggle("is-active", tab === "register");
+    document.getElementById("loginForm").style.display = tab === "login" ? "block" : "none";
+    document.getElementById("registerForm").style.display = tab === "register" ? "block" : "none";
+}
+
+async function submitLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById("loginUsernameInput")?.value.trim();
+    const password = document.getElementById("loginPasswordInput")?.value.trim();
+    if (!username || !password) return;
+
+    try {
+        const res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+            setAuthToken(data.token, data.user);
+            currentUser = data.user;
+            updateTopNavUI();
+            closeAuthModal();
+            showToast("Đăng nhập thành công!", "success");
+        } else {
+            showToast(data.message || "Đăng nhập thất bại", "error");
+        }
+    } catch (err) {
+        showToast("Lỗi kết nối máy chủ", "error");
+    }
+}
+
+async function submitRegister(e) {
+    e.preventDefault();
+    const username = document.getElementById("regUsernameInput")?.value.trim();
+    const email = document.getElementById("regEmailInput")?.value.trim();
+    const password = document.getElementById("regPasswordInput")?.value.trim();
+    const confirmPass = document.getElementById("regConfirmPasswordInput")?.value.trim();
+
+    if (password !== confirmPass) return showToast("Mật khẩu không khớp!", "error");
+
+    try {
+        const res = await fetch("/api/auth/register", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if (data.success && data.token) {
+            setAuthToken(data.token, data.user);
+            currentUser = data.user;
+            updateTopNavUI();
+            closeAuthModal();
+            showToast("Tạo tài khoản thành công!", "success");
+        } else {
+            showToast(data.message || "Đăng ký thất bại", "error");
+        }
+    } catch (err) {
+        showToast("Lỗi kết nối máy chủ", "error");
+    }
+}
+
+function handleLogout() {
+    setAuthToken(""); currentUser = null; updateTopNavUI(); closeAccountModal();
+    showToast("Đã đăng xuất tài khoản", "info");
+}
+
+// ================= BUY KEY SYSTEM =================
+function openBuyKeyModal() {
+    document.getElementById("buyKeyModal").style.display = "flex";
+    updateTopNavUI();
+}
+function closeBuyKeyModal() { document.getElementById("buyKeyModal").style.display = "none"; }
+
+function openAccountModal(tab = "info") {
+    if (!currentUser) return openAuthModal("login");
+    document.getElementById("accountModal").style.display = "flex";
+    switchAccountTab(tab);
+}
+function closeAccountModal() { document.getElementById("accountModal").style.display = "none"; }
+
+function switchAccountTab(tab) {
+    document.getElementById("tabBtnAccInfo")?.classList.toggle("is-active", tab === "info");
+    document.getElementById("tabBtnAccDeposit")?.classList.toggle("is-active", tab === "deposit");
+    document.getElementById("tabBtnAccHistory")?.classList.toggle("is-active", tab === "history");
+
+    document.getElementById("accTabInfo").style.display = tab === "info" ? "block" : "none";
+    document.getElementById("accTabDeposit").style.display = tab === "deposit" ? "block" : "none";
+    document.getElementById("accTabHistory").style.display = tab === "history" ? "block" : "none";
+}
+
+// Global Window Modal Closer
+window.addEventListener("click", e => {
     if (e.target.classList.contains("modal")) {
         e.target.style.display = "none";
     }
 });
 
-// ================= SHOP ACC =================
-let shopData = [];
-let currentIndex = 0;
-
-async function loadShop() {
-    try {
-        const res = await fetch("/shop-acc");
-        if (!res.ok) throw new Error("API lỗi");
-        shopData = await res.json();
-        if (!shopData.length) {
-            document.getElementById("shopSingle").innerHTML = "<p style='padding:30px;color:#64748b;'>Chưa có acc</p>";
-            return;
-        }
-        currentIndex = 0;
-        renderShop();
-    } catch (err) {
-        shopData = [
-            { image: "https://picsum.photos/seed/acc1/400/225", price: "500.000₫" },
-            { image: "https://picsum.photos/seed/acc2/400/225", price: "1.200.000₫" },
-            { image: "https://picsum.photos/seed/acc3/400/225", price: "850.000₫" }
-        ];
-        currentIndex = 0;
-        renderShop();
-    }
-}
-
-function renderShop() {
-    const acc = shopData[currentIndex];
-    document.getElementById("shopSingle").innerHTML = `
-        <div class="thumb">
-            <img src="${acc.image}" alt="acc">
-        </div>
-        <div class="shop-price">${acc.price}</div>
-        <button onclick="buyAcc()"><i class="fa-brands fa-discord"></i> Mua qua Discord</button>
-    `;
-}
-
-function nextAcc() {
-    if (!shopData.length) return;
-    currentIndex = (currentIndex + 1) % shopData.length;
-    renderShop();
-}
-
-function prevAcc() {
-    if (!shopData.length) return;
-    currentIndex = (currentIndex - 1 + shopData.length) % shopData.length;
-    renderShop();
-}
-
-function buyAcc() {
-    window.open("https://discord.com/users/chosenone_3667", "_blank");
-}
-
-// ================= POPUP THÔNG BÁO =================
-const POPUP_KEY = "popup_hidden_until";
-const NOTIFICATION_ITEMS = [
-    {
-        id: 1,
-        title: "Cập nhật Web El Dorado",
-        releaseDate: "2026-08-30 11:16 AM",
-        content: "Web Lần Đầu Chạy, Trải Nghiệm Miễn Phí Tại Web Nhé =)). List License Key 5 Lượt Dùng: "
-    },
-    {
-        id: 2,
-        title: "Tuyển Cộng Tác Viên El Dorado/ Gold Tower Defence",
-        releaseDate: "2026-08-29 2:30 PM",
-        content: "Bạn nào hack được GTD/El thì có thể liên hệ mình để hợp tác bán những vật phẩm trong shop nhé! Kênh của ad tương tác cực kì cao, phù hợp cho anh em hacker ế khách. Liên hệ tại https://www.facebook.com/minh.hung.63491"
-    },
-    {
-        id: 3,
-        title: "Fix Toolbox & Admin",
-        releaseDate: "2026-08-10",
-        content: "first release"
-    }
-];
-
-function renderNotificationList() {
-    const panel = document.getElementById("notificationList");
-    const badge = document.getElementById("notificationBadge");
-    if (!panel || !badge) return;
-
-    const sorted = [...NOTIFICATION_ITEMS].sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
-    panel.innerHTML = sorted.map(item => `
-        <button class="notification-item" type="button" onclick="openNotificationDetail(${item.id})">
-            <div class="notification-item-title">${item.title}</div>
-            <div class="notification-item-meta">
-                <span>Release</span>
-                <span>${formatNotificationDate(item.releaseDate)}</span>
-            </div>
-            <div class="notification-item-body">${(item.content || "").slice(0, 110)}${(item.content || "").length > 110 ? "..." : ""}</div>
-        </button>
-    
-    `).join("");
-
-    badge.textContent = sorted.length;
-    const meta = document.getElementById("notificationMeta");
-    const textCount = document.getElementById("notificationTextCount");
-    if (meta) meta.innerHTML = `Bạn có <strong>${sorted.length}</strong> thông báo mới`;
-    if (textCount) textCount.textContent = sorted.length;
-}
-
-function formatNotificationDate(dateString) {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    if (Number.isNaN(date.getTime())) return dateString;
-    return date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-function toggleNotificationPanel(forceOpen) {
-    const panel = document.getElementById("notificationPanel");
-    if (!panel) return;
-    const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : panel.style.display === "none";
-    panel.style.display = shouldOpen ? "block" : "none";
-}
-
-function openNotificationDetail(id) {
-    const item = NOTIFICATION_ITEMS.find(entry => entry.id === Number(id));
-    const modal = document.getElementById("notificationDetailModal");
-    const title = document.getElementById("notificationDetailTitle");
-    const date = document.getElementById("notificationDetailDate");
-    const body = document.getElementById("notificationDetailBody");
-    if (!item || !modal || !title || !date || !body) return;
-
-    title.textContent = item.title;
-    date.textContent = `Release: ${formatNotificationDate(item.releaseDate)}`;
-    body.textContent = item.content || "Không có nội dung thông báo.";
-    modal.style.display = "flex";
-    requestAnimationFrame(() => modal.classList.add("is-open"));
-    toggleNotificationPanel(false);
-}
-
-function closeNotificationDetail() {
-    const modal = document.getElementById("notificationDetailModal");
-    if (modal) {
-        modal.classList.remove("is-open");
-        modal.style.display = "none";
-    }
-}
-
-function closePopup() {
-    document.getElementById("updatePopup").style.display = "none";
-}
-
+// POPUP ANNOUNCEMENT
+function closePopup() { document.getElementById("updatePopup").style.display = "none"; }
 function hideFor2Hours() {
-    const now = Date.now();
-    const twoHours = 2 * 60 * 60 * 1000;
-    localStorage.setItem(POPUP_KEY, now + twoHours);
+    localStorage.setItem("popup_hidden_until", Date.now() + 2 * 60 * 60 * 1000);
     closePopup();
 }
 
-// ================= INIT =================
-document.addEventListener("DOMContentLoaded", function() {
-    setupPlatformListener();
-    renderProductCards();
-    renderNotificationList();
-
-    document.getElementById("notificationBellBtn")?.addEventListener("click", function() {
-        const panel = document.getElementById("notificationPanel");
-        if (!panel) return;
-        const show = panel.style.display === "none";
-        panel.style.display = show ? "block" : "none";
-        if (show) {
-            requestAnimationFrame(() => panel.classList.add("is-open"));
-        } else {
-            panel.classList.remove("is-open");
-        }
-    });
-
-    document.addEventListener("click", function(event) {
-        const bell = document.getElementById("notificationBellBtn");
-        const panel = document.getElementById("notificationPanel");
-        if (!bell || !panel) return;
-        if (!bell.contains(event.target) && !panel.contains(event.target)) {
-            panel.style.display = "none";
-        }
-    });
-
-    const hiddenUntil = localStorage.getItem(POPUP_KEY);
-    const now = Date.now();
-    if (hiddenUntil && now < hiddenUntil) {
-        document.getElementById("updatePopup").style.display = "none";
-    } else {
+document.addEventListener("DOMContentLoaded", () => {
+    initAuthSession();
+    const hiddenUntil = localStorage.getItem("popup_hidden_until");
+    if (!hiddenUntil || Date.now() > hiddenUntil) {
         document.getElementById("updatePopup").style.display = "flex";
     }
 });
-
-// ============================================================
-//               CHỨC NĂNG: MUA KEY TOOL BOX
-// ============================================================
-let buyKeyPollInterval = null;
-let buyKeyPollSeconds = 0;
-
-const RATE_TABLE = {
-    20000: 2,
-    50000: 5,
-    100000: 10,
-    200000: 30,
-    300000: 50,
-    500000: 100
-};
-
-function openBuyKeyModal() {
-    const modal = document.getElementById("buyKeyModal");
-    if (!modal) return;
-    modal.style.display = "flex";
-    requestAnimationFrame(() => modal.classList.add("is-open"));
-    resetBuyKeyForm();
-    if (typeof updateSavedKeysBadge === "function") {
-        updateSavedKeysBadge();
-    }
-}
-
-function closeBuyKeyModal() {
-    const modal = document.getElementById("buyKeyModal");
-    if (!modal) return;
-    modal.classList.remove("is-open");
-    modal.style.display = "none";
-    stopBuyKeyPolling();
-}
-
-window.addEventListener("click", function(event) {
-    const buyKeyModal = document.getElementById("buyKeyModal");
-    if (buyKeyModal && event.target === buyKeyModal) {
-        closeBuyKeyModal();
-    }
-    const notificationModal = document.getElementById("notificationDetailModal");
-    if (notificationModal && event.target === notificationModal) {
-        closeNotificationDetail();
-    }
-});
-
-function resetBuyKeyForm() {
-    const form = document.getElementById("buyKeyForm");
-    if (form) form.reset();
-
-    toggleHasKeyMode(false);
-    updateSelectedAmountNote();
-
-    const statusBox = document.getElementById("buyKeyStatusBox");
-    if (statusBox) {
-        statusBox.style.display = "none";
-        statusBox.className = "buykey-status-box";
-        statusBox.innerHTML = "";
-    }
-
-    const keyCheckMsg = document.getElementById("keyCheckMessage");
-    if (keyCheckMsg) {
-        keyCheckMsg.innerHTML = "";
-        keyCheckMsg.className = "key-check-msg";
-    }
-
-    stopBuyKeyPolling();
-}
-
-function selectBuyAmount(amount) {
-    const select = document.getElementById("buyKeyAmountSelect");
-    if (select) {
-        select.value = String(amount);
-        updateSelectedAmountNote();
-    }
-
-    // Highlight item
-    document.querySelectorAll(".rate-item").forEach(item => {
-        item.classList.remove("is-selected");
-        if (item.textContent.includes(amount.toLocaleString("vi-VN"))) {
-            item.classList.add("is-selected");
-        }
-    });
-}
-
-function toggleHasKeyMode(hasKey) {
-    const existingGroup = document.getElementById("existingKeyGroup");
-    const existingInput = document.getElementById("existingKeyInput");
-    const submitBtnText = document.getElementById("buyKeyBtnText");
-
-    if (existingGroup) {
-        existingGroup.style.display = hasKey ? "block" : "none";
-    }
-    if (existingInput) {
-        existingInput.required = Boolean(hasKey);
-        if (!hasKey) existingInput.value = "";
-    }
-
-    const amount = Number(document.getElementById("buyKeyAmountSelect")?.value || 0);
-    const uses = RATE_TABLE[amount] || 0;
-    const usesText = uses > 0 ? ` (+${uses} lượt)` : "";
-
-    if (submitBtnText) {
-        submitBtnText.textContent = hasKey
-            ? `Nạp thẻ & Thêm Lượt Vào Key${usesText}`
-            : `Nạp thẻ & Nhận Key Mới${usesText}`;
-    }
-}
-
-function updateSelectedAmountNote() {
-    const amount = Number(document.getElementById("buyKeyAmountSelect")?.value || 0);
-    const hasKey = document.querySelector('input[name="hasKeyRadio"]:checked')?.value === "true";
-    const uses = RATE_TABLE[amount] || 0;
-    const usesText = uses > 0 ? ` (+${uses} lượt)` : "";
-    const submitBtnText = document.getElementById("buyKeyBtnText");
-
-    if (submitBtnText) {
-        submitBtnText.textContent = hasKey
-            ? `Nạp thẻ & Thêm Lượt Vào Key${usesText}`
-            : `Nạp thẻ & Nhận Key Mới${usesText}`;
-    }
-
-    // Cập nhật class highlight
-    document.querySelectorAll(".rate-item").forEach(item => {
-        item.classList.remove("is-selected");
-        if (amount > 0 && item.textContent.includes(amount.toLocaleString("vi-VN"))) {
-            item.classList.add("is-selected");
-        }
-    });
-}
-
-async function verifyInputKey() {
-    const input = document.getElementById("existingKeyInput");
-    const msg = document.getElementById("keyCheckMessage");
-    if (!input || !msg) return;
-
-    const key = input.value.trim().toUpperCase();
-    if (!key) {
-        msg.className = "key-check-msg error";
-        msg.textContent = "Vui lòng nhập License Key cần kiểm tra.";
-        return;
-    }
-
-    msg.className = "key-check-msg";
-    msg.textContent = "Đang kiểm tra key trên hệ thống...";
-
-    try {
-        const res = await fetch(`/api/buy-license/check-key/${encodeURIComponent(key)}`);
-        const data = await res.json();
-        if (data.success && data.valid) {
-            msg.className = "key-check-msg success";
-            msg.innerHTML = `<i class="fa-solid fa-circle-check"></i> Key hợp lệ! Đang có <strong>${data.maxUses || 0}</strong> lượt (đã dùng: ${data.usedCount || 0}).`;
-            if (typeof savePurchasedKeyToStorage === "function") {
-                savePurchasedKeyToStorage({
-                    key: key,
-                    uses: data.maxUses || 0,
-                    mode: "verified"
-                });
-            }
-        } else {
-            msg.className = "key-check-msg error";
-            msg.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> ${data.message || "Key không tồn tại hoặc đã bị khóa."}`;
-        }
-    } catch (e) {
-        msg.className = "key-check-msg success";
-        msg.innerHTML = `<i class="fa-solid fa-circle-check"></i> Demo: Key hợp lệ! Hệ thống đang chạy ở chế độ local, bạn có thể dùng thử trong giao diện.`;
-        if (typeof savePurchasedKeyToStorage === "function") {
-            savePurchasedKeyToStorage({ key, uses: 10, mode: "verified" });
-        }
-    }
-}
-
-async function submitBuyKeyCard(event) {
-    event.preventDefault();
-
-    const telco = document.getElementById("buyKeyTelcoSelect")?.value;
-    const amount = Number(document.getElementById("buyKeyAmountSelect")?.value);
-    const serial = document.getElementById("buyKeySerialInput")?.value.trim();
-    const code = document.getElementById("buyKeyCodeInput")?.value.trim();
-    const hasKey = document.querySelector('input[name="hasKeyRadio"]:checked')?.value === "true";
-    const existingKey = document.getElementById("existingKeyInput")?.value.trim().toUpperCase();
-
-    const statusBox = document.getElementById("buyKeyStatusBox");
-    const submitBtn = document.getElementById("buyKeySubmitBtn");
-
-    if (!telco || !amount || !serial || !code) {
-        alert("Vui lòng điền đầy đủ thông tin thẻ cào.");
-        return;
-    }
-
-    if (hasKey && !existingKey) {
-        alert("Vui lòng nhập License Key hiện tại của bạn để cộng thêm lượt.");
-        document.getElementById("existingKeyInput")?.focus();
-        return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.style.opacity = "0.6";
-
-    statusBox.style.display = "block";
-    statusBox.className = "buykey-status-box pending";
-    statusBox.innerHTML = `
-        <div class="status-spinner"></div>
-        <h4 style="color:#fbbf24; margin-bottom: 6px;">Đang gửi thông tin thẻ...</h4>
-        <p style="color:#94a3b8; font-size:13px;">Hệ thống đang kết nối và nạp thẻ, vui lòng chờ trong giây lát.</p>
-    `;
-
-    try {
-        const response = await fetch("/api/buy-license/submit-card", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                telco,
-                amount,
-                serial,
-                code,
-                hasKey,
-                existingKey
-            })
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(data.message || "Thẻ không hợp lệ hoặc bị từ chối.");
-        }
-
-        const requestId = data.requestId;
-        startBuyKeyPolling(requestId, hasKey, data.rewardUses);
-
-    } catch (err) {
-        const demoKey = `KEY-${Math.random().toString(36).toUpperCase().slice(2, 14)}`;
-        const demoUses = RATE_TABLE[amount] || 5;
-        statusBox.className = "buykey-status-box success";
-        statusBox.innerHTML = `
-            <i class="fa-solid fa-circle-check" style="font-size:36px; color:#10b981; margin-bottom:8px;"></i>
-            <h3 style="color:#34d399; margin-bottom: 6px;">Demo: Nạp thẻ thành công</h3>
-            <p style="color:#e2e8f0; font-size:13px;">Trang đang chạy ở chế độ local/offline, nên đây là trạng thái demo để bạn kiểm tra giao diện.</p>
-            <div class="key-result-box">
-                <div class="key-result-title">LICENSE KEY DEMO:</div>
-                <div class="key-code-display" id="displayNewKey">${demoKey}</div>
-                <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px;">
-                    <button type="button" class="btn-copy-key" onclick="copyCreatedKey('${demoKey}')">
-                        <i class="fa-solid fa-copy"></i> Sao chép Key
-                    </button>
-                    <button type="button" class="btn-copy-key" style="background:#0284c7; border-color:#38bdf8;" onclick="useSavedKeyForToolbox('${demoKey}')">
-                        <i class="fa-solid fa-bolt"></i> Dùng ngay
-                    </button>
-                </div>
-            </div>
-            <p style="color:#94a3b8; font-size:12px; margin-top:10px;">+${demoUses} lượt dùng demo đã được gán cho key này.</p>
-        `;
-        savePurchasedKeyToStorage({ key: demoKey, uses: demoUses, amount, telco, mode: "new" });
-        submitBtn.disabled = false;
-        submitBtn.style.opacity = "1";
-    }
-}
-
-function startBuyKeyPolling(requestId, hasKey, expectedUses) {
-    stopBuyKeyPolling();
-    buyKeyPollSeconds = 0;
-
-    const statusBox = document.getElementById("buyKeyStatusBox");
-    const submitBtn = document.getElementById("buyKeySubmitBtn");
-
-    async function check() {
-        buyKeyPollSeconds += 3;
-
-        if (location.protocol === "file:") {
-            stopBuyKeyPolling();
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = "1";
-            statusBox.className = "buykey-status-box success";
-            statusBox.innerHTML = `
-                <i class="fa-solid fa-circle-check" style="font-size:36px; color:#10b981; margin-bottom:8px;"></i>
-                <h3 style="color:#34d399; margin-bottom: 6px;">Demo: Thẻ đã được xử lý</h3>
-                <p style="color:#e2e8f0; font-size:13px;">Trang đang chạy ở chế độ local/offline, nên hệ thống sẽ hiển thị trạng thái demo để bạn test giao diện.</p>
-            `;
-            return;
-        }
-
-        try {
-            const res = await fetch(`/api/buy-license/status/${encodeURIComponent(requestId)}`);
-            const data = await res.json();
-
-            if (!data.success || !data.statusText) return;
-
-            const st = data.statusText; // "pending" | "success" | "failed" | "wrong_value"
-
-            if (st === "pending") {
-                statusBox.className = "buykey-status-box pending";
-                statusBox.innerHTML = `
-                    <div class="status-spinner"></div>
-                    <h4 style="color:#fbbf24; margin-bottom: 6px;">Đang gạch thẻ trên hệ thống... (${buyKeyPollSeconds}s)</h4>
-                    <p style="color:#94a3b8; font-size:13px;">Mã đơn: <code style="color:#fbbf24">${requestId}</code></p>
-                    <p style="color:#cbd5e1; font-size:12px; margin-top:4px;">Vui lòng không đóng trang. Kết quả sẽ hiển thị ngay khi hoàn tất.</p>
-                `;
-                return;
-            }
-
-            // GIAO DỊCH ĐÃ CÓ KẾT QUẢ -> DỪNG POLL
-            stopBuyKeyPolling();
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = "1";
-
-            // TH1: Thành công
-            if (st === "success" && data.fulfilled) {
-                statusBox.className = "buykey-status-box success";
-
-                const actualUses = Number(data.addedUses || data.rewardUses || expectedUses || 0);
-                const actualAmount = Number(data.value || data.declared_value || 0);
-                const actualTelco = String(data.telco || "");
-
-                if (data.mode === "new" && data.createdKey) {
-                    const newKey = String(data.createdKey).trim();
-
-                    // Tự động lưu key mới vào Local Storage (an toàn trong try-catch)
-                    try {
-                        if (typeof savePurchasedKeyToStorage === "function") {
-                            savePurchasedKeyToStorage({
-                                key: newKey,
-                                uses: actualUses,
-                                amount: actualAmount,
-                                telco: actualTelco,
-                                mode: "new"
-                            });
-                        }
-                    } catch (storeErr) {
-                        console.warn("Lỗi lưu storage:", storeErr);
-                    }
-
-                    // Hiển thị key mới ngay lập tức
-                    statusBox.innerHTML = `
-                        <i class="fa-solid fa-circle-check" style="font-size:36px; color:#10b981; margin-bottom:8px;"></i>
-                        <h3 style="color:#34d399; margin-bottom: 6px;">Mua Key Thành Công!</h3>
-                        <p style="color:#e2e8f0; font-size:13px;">Key của bạn đã được tạo với <strong>+${actualUses} lượt dùng</strong> và đã được lưu vào trình duyệt.</p>
-                        
-                        <div class="key-result-box">
-                            <div class="key-result-title">LICENSE KEY CỦA BẠN:</div>
-                            <div class="key-code-display" id="displayNewKey">${newKey}</div>
-                            <br>
-                            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
-                                <button type="button" class="btn-copy-key" onclick="copyCreatedKey('${newKey}')">
-                                    <i class="fa-solid fa-copy"></i> Sao chép Key
-                                </button>
-                                <button type="button" class="btn-copy-key" style="background:#0284c7; border-color:#38bdf8;" onclick="useSavedKeyForToolbox('${newKey}')">
-                                    <i class="fa-solid fa-bolt"></i> Dùng ngay trong Toolbox
-                                </button>
-                            </div>
-                        </div>
-                        <p style="color:#94a3b8; font-size:12px; margin-top:10px;">Bấm nút <strong>"Key của bạn"</strong> ở trên để xem lại danh sách key bất cứ lúc nào!</p>
-                    `;
-                } else {
-                    // Nạp thêm lượt vào key có sẵn
-                    const targetKey = String(data.targetKey || "").trim();
-
-                    try {
-                        if (typeof savePurchasedKeyToStorage === "function" && targetKey) {
-                            savePurchasedKeyToStorage({
-                                key: targetKey,
-                                uses: actualUses,
-                                amount: actualAmount,
-                                telco: actualTelco,
-                                mode: "topup"
-                            });
-                        }
-                    } catch (storeErr) {
-                        console.warn("Lỗi lưu storage:", storeErr);
-                    }
-
-                    statusBox.innerHTML = `
-                        <i class="fa-solid fa-circle-check" style="font-size:36px; color:#10b981; margin-bottom:8px;"></i>
-                        <h3 style="color:#34d399; margin-bottom: 6px;">Nạp Lượt Dùng Thành Công!</h3>
-                        <p style="color:#e2e8f0; font-size:14px; margin-top:8px;">
-                            Đã cộng thành công <strong>+${data.addedUses || expectedUses} lượt dùng</strong> vào key:
-                            <br>
-                            <code style="color:#34d399; font-size:16px; font-weight:700;">${data.targetKey || ""}</code>
-                        </p>
-                    `;
-                }
-                return;
-            }
-
-            // TH2: Sai mệnh giá
-            if (st === "wrong_value" || data.status === 3) {
-                statusBox.className = "buykey-status-box error";
-                statusBox.innerHTML = `
-                    <i class="fa-solid fa-triangle-exclamation" style="font-size:36px; color:#ef4444; margin-bottom:8px;"></i>
-                    <h3 style="color:#f87171; margin-bottom: 6px;">Thẻ Sai Mệnh Giá!</h3>
-                    <p style="color:#fca5a5; font-size:13px; margin-top:4px;">
-                        ${data.fulfillError || "Mệnh giá thẻ bạn gửi không khớp với mệnh giá khai báo. Theo quy định, hệ thống KHÔNG tạo key hoặc cộng lượt cho thẻ sai mệnh giá."}
-                    </p>
-                `;
-                return;
-            }
-
-            // TH3: Thẻ lỗi / Thất bại
-            statusBox.className = "buykey-status-box error";
-            statusBox.innerHTML = `
-                <i class="fa-solid fa-circle-xmark" style="font-size:36px; color:#ef4444; margin-bottom:8px;"></i>
-                <h3 style="color:#f87171; margin-bottom: 6px;">Nạp Thẻ Thất Bại</h3>
-                <p style="color:#e2e8f0; font-size:13px; margin-top:4px;">
-                    ${data.message || data.fulfillError || "Thẻ sai mã, số seri hoặc đã từng được sử dụng. Vui lòng kiểm tra lại."}
-                </p>
-            `;
-
-        } catch (e) {
-            console.warn("Polling error:", e);
-        }
-
-        // Tự động dừng sau 3 phút
-        if (buyKeyPollSeconds > 180) {
-            stopBuyKeyPolling();
-            submitBtn.disabled = false;
-            submitBtn.style.opacity = "1";
-            statusBox.innerHTML += `<p style="color:#94a3b8; font-size:12px; margin-top:8px;">Giao dịch đang mất nhiều thời gian hơn bình thường. Bạn có thể kiểm tra lại sau với mã đơn: <code>${requestId}</code>.</p>`;
-        }
-    }
-
-    buyKeyPollInterval = setInterval(check, 3000);
-}
-
-function stopBuyKeyPolling() {
-    if (buyKeyPollInterval) {
-        clearInterval(buyKeyPollInterval);
-        buyKeyPollInterval = null;
-    }
-}
-
-function copyCreatedKey(key) {
-    if (!key) return;
-    navigator.clipboard.writeText(key).then(() => {
-        alert(`Đã sao chép License Key: ${key}\nHãy dán vào Toolbox để sử dụng!`);
-    }).catch(() => {
-        prompt("Sao chép License Key:", key);
-    });
-}
-
-// ============================================================
-//            LOCAL STORAGE - LƯU & XEM KEY ĐÃ MUA
-// ============================================================
-const STORAGE_KEY_SAVED_KEYS = "rubyfree_saved_license_keys";
-
-function getSavedKeysFromStorage() {
-    try {
-        const raw = localStorage.getItem(STORAGE_KEY_SAVED_KEYS);
-        if (!raw) return [];
-        const parsed = JSON.parse(raw);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-        console.warn("Lỗi đọc localStorage keys:", e);
-        return [];
-    }
-}
-
-function savePurchasedKeyToStorage({ key, uses, amount, telco, mode }) {
-    if (!key) return;
-    try {
-        const list = getSavedKeysFromStorage();
-        const now = new Date();
-        const timeStr = now.toLocaleDateString("vi-VN") + " " + now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-
-        const cleanKey = String(key).trim().toUpperCase();
-        const existingIdx = list.findIndex(item => item.key.toUpperCase() === cleanKey);
-
-        if (existingIdx !== -1) {
-            // Đã có key -> cộng dồn lượt hoặc cập nhật lượt mới nhất
-            if (mode === "topup") {
-                list[existingIdx].uses = (Number(list[existingIdx].uses) || 0) + (Number(uses) || 0);
-            } else {
-                list[existingIdx].uses = Number(uses) || list[existingIdx].uses;
-            }
-            list[existingIdx].lastUpdated = timeStr;
-            if (amount) list[existingIdx].amount = Number(amount);
-            if (telco) list[existingIdx].telco = telco;
-            // Đưa lên đầu danh sách
-            const item = list.splice(existingIdx, 1)[0];
-            list.unshift(item);
-        } else {
-            // Thêm mới vào đầu danh sách
-            list.unshift({
-                key: cleanKey,
-                uses: Number(uses) || 0,
-                amount: Number(amount) || 0,
-                telco: telco || "",
-                mode: mode || "new",
-                createdAt: timeStr,
-                timestamp: now.getTime()
-            });
-        }
-
-        // Lưu tối đa 50 key gần nhất
-        if (list.length > 50) list.length = 50;
-
-        localStorage.setItem(STORAGE_KEY_SAVED_KEYS, JSON.stringify(list));
-        updateSavedKeysBadge();
-
-        const panel = document.getElementById("savedKeysPanel");
-        if (panel && panel.style.display !== "none") {
-            renderSavedKeysList();
-        }
-    } catch (e) {
-        console.warn("Lỗi lưu key vào localStorage:", e);
-    }
-}
-
-function updateSavedKeysBadge() {
-    const pill = document.getElementById("savedKeysCountPill");
-    if (!pill) return;
-    const list = getSavedKeysFromStorage();
-    pill.textContent = list.length;
-}
-
-function toggleSavedKeysPanel() {
-    const panel = document.getElementById("savedKeysPanel");
-    const icon = document.getElementById("savedKeysToggleIcon");
-    if (!panel) return;
-
-    if (panel.style.display === "none" || !panel.style.display) {
-        panel.style.display = "block";
-        if (icon) icon.style.transform = "rotate(180deg)";
-        renderSavedKeysList();
-    } else {
-        panel.style.display = "none";
-        if (icon) icon.style.transform = "rotate(0deg)";
-    }
-}
-
-function renderSavedKeysList() {
-    const container = document.getElementById("savedKeysListContainer");
-    if (!container) return;
-
-    const list = getSavedKeysFromStorage();
-    if (list.length === 0) {
-        container.innerHTML = `
-            <div class="saved-keys-empty">
-                <i class="fa-solid fa-folder-open"></i>
-                <p>Chưa có License Key nào được lưu trên trình duyệt.</p>
-                <span>Khi bạn nạp thẻ mua Key thành công, hệ thống sẽ tự động lưu Key của bạn tại đây!</span>
-            </div>
-        `;
-        return;
-    }
-
-    let html = "";
-    list.forEach((item, index) => {
-        const timeDisplay = item.lastUpdated ? `Cập nhật: ${item.lastUpdated}` : (item.createdAt || "");
-        const amountDisplay = item.amount ? `${Number(item.amount).toLocaleString("vi-VN")}đ` : "";
-        const telcoDisplay = item.telco ? `${item.telco}` : "";
-
-        html += `
-            <div class="saved-key-card" id="savedKeyCard_${index}">
-                <div class="saved-key-main">
-                    <div class="saved-key-code-row">
-                        <span class="saved-key-code">${item.key}</span>
-                        <span class="saved-key-badge-uses">+${item.uses} lượt</span>
-                    </div>
-                    <div class="saved-key-meta">
-                        ${telcoDisplay ? `<span class="saved-key-meta-item"><i class="fa-solid fa-sim-card"></i> ${telcoDisplay}</span>` : ""}
-                        ${amountDisplay ? `<span class="saved-key-meta-item"><i class="fa-solid fa-money-bill"></i> ${amountDisplay}</span>` : ""}
-                        <span class="saved-key-meta-item"><i class="fa-solid fa-clock"></i> ${timeDisplay}</span>
-                    </div>
-                </div>
-
-                <div class="saved-key-actions">
-                    <button type="button" class="btn-saved-action btn-saved-copy" onclick="copySavedKeyItem('${item.key}', this)" title="Sao chép Key">
-                        <i class="fa-solid fa-copy"></i>
-                        <span>Sao chép</span>
-                    </button>
-                    <button type="button" class="btn-saved-action btn-saved-use-topup" onclick="useSavedKeyForTopup('${item.key}')" title="Điền key để nạp thêm lượt">
-                        <i class="fa-solid fa-arrow-up-right-dots"></i>
-                        <span>Nạp lượt</span>
-                    </button>
-                    <button type="button" class="btn-saved-action btn-saved-use-toolbox" onclick="useSavedKeyForToolbox('${item.key}')" title="Mở Toolbox và dùng ngay key này">
-                        <i class="fa-solid fa-bolt"></i>
-                        <span>Toolbox</span>
-                    </button>
-                    <button type="button" class="btn-saved-action btn-saved-del" onclick="deleteSavedKeyItem('${item.key}')" title="Xóa khỏi lịch sử">
-                        <i class="fa-solid fa-trash-can"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-}
-
-function copySavedKeyItem(key, btn) {
-    if (!key) return;
-    navigator.clipboard.writeText(key).then(() => {
-        if (btn) {
-            const originalHTML = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-check" style="color: #34d399;"></i> <span>Đã chép!</span>`;
-            btn.style.borderColor = "#10b981";
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.style.borderColor = "";
-            }, 2000);
-        } else {
-            alert(`Đã sao chép License Key: ${key}`);
-        }
-    }).catch(() => {
-        prompt("Sao chép License Key:", key);
-    });
-}
-
-function useSavedKeyForTopup(key) {
-    if (!key) return;
-    toggleHasKeyMode(true);
-    const radioTrue = document.querySelector('input[name="hasKeyRadio"][value="true"]');
-    if (radioTrue) radioTrue.checked = true;
-
-    const input = document.getElementById("existingKeyInput");
-    if (input) {
-        input.value = key;
-        input.focus();
-    }
-
-    const panel = document.getElementById("savedKeysPanel");
-    const icon = document.getElementById("savedKeysToggleIcon");
-    if (panel) panel.style.display = "none";
-    if (icon) icon.style.transform = "rotate(0deg)";
-
-    verifyInputKey();
-}
-
-function useSavedKeyForToolbox(key) {
-    if (!key) return;
-    navigator.clipboard.writeText(key).catch(() => {});
-
-    const toolboxInput = document.getElementById("elLicenseKeyInput");
-    if (toolboxInput) {
-        toolboxInput.value = key;
-    }
-
-    closeBuyKeyModal();
-
-    if (typeof openElDoradoToolbox === "function") {
-        openElDoradoToolbox();
-    }
-}
-
-function deleteSavedKeyItem(key) {
-    if (!key) return;
-    if (!confirm(`Bạn có chắc muốn xóa License Key "${key}" khỏi danh sách lưu trên trình duyệt?`)) return;
-
-    try {
-        let list = getSavedKeysFromStorage();
-        list = list.filter(item => item.key.toUpperCase() !== key.toUpperCase());
-        localStorage.setItem(STORAGE_KEY_SAVED_KEYS, JSON.stringify(list));
-        updateSavedKeysBadge();
-        renderSavedKeysList();
-    } catch (e) {
-        console.warn("Lỗi xóa key:", e);
-    }
-}
-
-function clearAllSavedKeys() {
-    const list = getSavedKeysFromStorage();
-    if (list.length === 0) return;
-    if (!confirm("Bạn có chắc muốn xóa TOÀN BỘ danh sách License Key đã lưu trên trình duyệt này?")) return;
-
-    try {
-        localStorage.removeItem(STORAGE_KEY_SAVED_KEYS);
-        updateSavedKeysBadge();
-        renderSavedKeysList();
-    } catch (e) {
-        console.warn("Lỗi xóa toàn bộ key:", e);
-    }
-}
-
