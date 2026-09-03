@@ -94,6 +94,8 @@ const CARD_RATE_MAP = Object.freeze({
     300000: 50,
     500000: 100
 });
+const MB_SPIN_COST_MAP = Object.freeze({ 1: 1, 5: 5, 10: 10, 22: 20, 35: 30, 65: 50 });
+const CREDIT_REWARD_MAP = Object.freeze({ 1: 1, 2: 2, 5: 5, 10: 10, 20: 30, 30: 50, 50: 100 });
 
 // 3 loại thẻ được phép nạp: Vina, Viettel, Garena
 const ALLOWED_CARD_TELCOS = Object.freeze({
@@ -314,6 +316,19 @@ async function ipGuard(req, res, next) {
     } else {
         country = String(req.get("cf-ipcountry") || "").trim().toUpperCase();
         console.warn("[IP-GUARD] IPINFO_TOKEN not set, using cf-ipcountry fallback");
+        if (!country || USE_IPAPI) {
+            try {
+                const ipApiResult = await checkProxyWithIpApi(ip);
+                country = country || ipApiResult.country;
+                if (ipApiResult.isProxy) {
+                    console.warn(`[IP-GUARD] Blocked proxy/VPN IP ${ip} (fallback ip-api)`);
+                    return denyAccess(req, res);
+                }
+            } catch (error) {
+                console.error(`[IP-GUARD] fallback ip-api error for ${ip}:`, error.message);
+                if (IP_RISK_FAIL_CLOSED) return denyAccess(req, res);
+            }
+        }
     }
     if (!country || !ALLOWED_COUNTRIES.has(country)) {
         console.warn(`[IP-GUARD] Blocked IP from ${country || 'unknown'}, ip=${ip}`);
@@ -3160,7 +3175,6 @@ app.get("/api/admin/users", requireAdmin, async (req, res) => {
                 username: u.displayName || u.username,
                 rawUsername: u.username,
                 email: u.email,
-                plainPassword: u.plainPassword || "(Chưa lưu mật khẩu gốc)",
                 balance: u.balance || 0,
                 credits: u.credits ?? Math.floor((u.balance || 0) / 10000),
                 status: u.status || "active",
@@ -3239,6 +3253,46 @@ app.post("/api/admin/users/update-balance", requireAdmin, async (req, res) => {
     } catch (err) {
         console.error("[ADMIN USERS] Update balance error:", err);
         return res.status(500).json({ success: false, message: "Lỗi cập nhật số dư" });
+    }
+});
+
+app.post("/api/admin/users/update-account", requireAdmin, async (req, res) => {
+    try {
+        await waitForDB();
+        const { id, username } = req.body || {};
+        const hasBalance = req.body?.newBalance !== undefined && req.body?.newBalance !== "";
+        const hasCredits = req.body?.newCredits !== undefined && req.body?.newCredits !== "";
+        const balance = hasBalance ? Number(req.body.newBalance) : undefined;
+        const credits = hasCredits ? Number(req.body.newCredits) : undefined;
+
+        if (!hasBalance && !hasCredits) {
+            return res.status(400).json({ success: false, message: "Cần nhập số dư hoặc credit" });
+        }
+        if (hasBalance && (!Number.isFinite(balance) || balance < 0)) {
+            return res.status(400).json({ success: false, message: "Số dư không hợp lệ" });
+        }
+        if (hasCredits && (!Number.isInteger(credits) || credits < 0)) {
+            return res.status(400).json({ success: false, message: "Credit phải là số nguyên không âm" });
+        }
+
+        const filter = id && ObjectId.isValid(id)
+            ? { _id: new ObjectId(id) }
+            : username
+                ? { username: String(username).trim().toLowerCase() }
+                : null;
+        if (!filter) return res.status(400).json({ success: false, message: "Thiếu ID hoặc Username" });
+
+        const update = { $set: { updatedAt: new Date() } };
+        if (hasBalance) update.$set.balance = balance;
+        if (hasCredits) update.$set.credits = credits;
+        const result = await accountsCollection.updateOne(filter, update);
+        if (!result.matchedCount) return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
+
+        const user = await accountsCollection.findOne(filter, { projection: { balance: 1, credits: 1 } });
+        return res.json({ success: true, balance: user.balance || 0, credits: user.credits || 0, message: "Đã cập nhật tài khoản" });
+    } catch (err) {
+        console.error("[ADMIN USERS] Update account error:", err);
+        return res.status(500).json({ success: false, message: "Lỗi cập nhật tài khoản" });
     }
 });
 
@@ -3343,6 +3397,77 @@ app.post("/api/admin/users/change-password", requireAdmin, async (req, res) => {
     }
 });
 
+// ── Mystery Box Ruby ──
+app.post("/api/mystery-box/buy-spins", requireUserAuth, async (req, res) => {
+    try {
+        await waitForDB();
+        const spinsCount = Math.floor(Number(req.body?.spinsCount));
+        if (!Number.isInteger(spinsCount) || spinsCount < 1 || spinsCount > 100) {
+            return res.status(400).json({ success: false, message: "Số lượt mua phải từ 1 đến 100." });
+        }
+        const cost = MB_SPIN_COST_MAP[spinsCount] || spinsCount * 2;
+        const accountBalance = Number(req.user.balance || 0);
+        const accountCredits = Number(req.user.credits);
+        if (!Number.isFinite(accountCredits)) {
+            await accountsCollection.updateOne(
+                { _id: req.user._id, credits: { $exists: false } },
+                { $set: { credits: Math.floor(accountBalance / 10000), updatedAt: new Date() } }
+            );
+        }
+        const result = await accountsCollection.findOneAndUpdate(
+            { _id: req.user._id, credits: { $gte: cost } },
+            { $inc: { credits: -cost, mysterySpins: spinsCount }, $set: { updatedAt: new Date() } },
+            { returnDocument: "after" }
+        );
+        if (!result) return res.status(400).json({ success: false, message: "Số dư credit không đủ." });
+        const user = result.value || result;
+        return res.json({ success: true, mysterySpins: user.mysterySpins || 0, newBalance: user.balance || 0, newCredits: user.credits || 0, message: `Đã mua ${spinsCount} lượt mở Túi Mù.` });
+    } catch (err) {
+        console.error("Mystery spin purchase error:", err);
+        return res.status(500).json({ success: false, message: "Lỗi mua lượt Túi Mù." });
+    }
+});
+
+app.post("/api/mystery-ruby-box", requireUserAuth, async (req, res) => {
+    const accountId = String(req.body?.accountId || "").trim();
+    const platform = String(req.body?.platform || "").trim().toUpperCase();
+    const userKey = String(req.body?.userKey || "").trim();
+    const email = String(req.body?.email || "").trim();
+    if (!accountId || !["AMO", "ATV", "LG", "SS", "SSVN"].includes(platform)) {
+        return res.status(400).json({ success: false, message: "Thông tin tài khoản game không hợp lệ." });
+    }
+    try {
+        await waitForDB();
+        const reserved = await accountsCollection.findOneAndUpdate(
+            { _id: req.user._id, mysterySpins: { $gte: 1 } },
+            { $inc: { mysterySpins: -1 }, $set: { updatedAt: new Date() } },
+            { returnDocument: "after" }
+        );
+        if (!reserved) return res.status(400).json({ success: false, message: "Bạn không còn lượt mở Túi Mù." });
+        try {
+            const normalizedPlatform = platform === "SSVN" ? "SS" : platform;
+            const session = await resolveElToolboxSession(accountId, userKey, normalizedPlatform, email);
+            const rubyAmount = nodeCrypto.randomInt(1000, 10001);
+            const sendResult = await sendElRuby({
+                hostId: accountId,
+                context: session.context,
+                runCount: session.runCountResult.runCount,
+                rubyHack: rubyAmount,
+                useProxy: session.runCountResult.useProxy,
+                email
+            });
+            const remainingSpins = (reserved.value || reserved).mysterySpins || 0;
+            return res.json({ success: true, rubyAmount, totalRuby: sendResult.totalRuby || 0, remainingSpins });
+        } catch (err) {
+            await accountsCollection.updateOne({ _id: req.user._id }, { $inc: { mysterySpins: 1 } });
+            throw err;
+        }
+    } catch (err) {
+        console.error("Mystery ruby box error:", err);
+        return res.status(500).json({ success: false, message: "Không thể gửi Ruby lúc này." });
+    }
+});
+
 // ── 1. Đăng ký tài khoản ──
 app.post("/api/auth/register", async (req, res) => {
     try {
@@ -3360,7 +3485,7 @@ app.post("/api/auth/register", async (req, res) => {
         if (!password || password.length < 6) {
             return res.status(400).json({ success: false, message: "Mật khẩu phải có ít nhất 6 ký tự" });
         }
-        if (!email || !/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) {
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ success: false, message: "Vui lòng nhập địa chỉ Gmail/Email hợp lệ" });
         }
 
@@ -3411,7 +3536,8 @@ app.post("/api/auth/register", async (req, res) => {
                 username: usernameRaw.toUpperCase(),
                 email,
                 balance: 0,
-                credits: 0
+                credits: 0,
+                mysterySpins: 0
             }
         });
 
@@ -3469,7 +3595,8 @@ app.post("/api/auth/login", async (req, res) => {
                 username: user.displayName || user.username.toUpperCase(),
                 email: user.email,
                 balance: currentBalance,
-                credits: currentCredits
+                credits: currentCredits,
+                mysterySpins: user.mysterySpins || 0
             }
         });
 
@@ -3493,6 +3620,7 @@ app.get("/api/auth/me", requireUserAuth, async (req, res) => {
                 email: u.email,
                 balance,
                 credits,
+                mysterySpins: u.mysterySpins || 0,
                 createdAt: u.createdAt
             }
         });
@@ -3695,7 +3823,7 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
 
         // Trừ tiền và credit trong tài khoản
         const deductResult = await accountsCollection.updateOne(
-            { _id: freshUser._id, balance: { $gte: costVnd } },
+            { _id: freshUser._id, balance: { $gte: costVnd }, credits: { $gte: creditsToUse } },
             {
                 $inc: { balance: -costVnd, credits: -creditsToUse },
                 $set: { updatedAt: new Date() }
@@ -3711,6 +3839,7 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
 
         const newBalance = currentBalance - costVnd;
         const newCredits = Math.max(0, (freshUser.credits ?? Math.floor(currentBalance / 10000)) - creditsToUse);
+        const rewardUses = CREDIT_REWARD_MAP[creditsToUse] || creditsToUse;
         const userIp = getIP(req);
         const now = new Date();
 
@@ -3731,7 +3860,7 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
             await licensesCollection.updateOne(
                 { key: targetKey },
                 {
-                    $inc: { maxUses: creditsToUse },
+                    $inc: { maxUses: rewardUses },
                     $set: {
                         lastTopupAt: now,
                         lastTopupIp: userIp,
@@ -3747,10 +3876,10 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
                 success: true,
                 mode: "topup",
                 targetKey,
-                addedUses: creditsToUse,
+                addedUses: rewardUses,
                 newBalance,
                 newCredits,
-                message: `Nạp thêm ${creditsToUse} lượt thành công vào key ${targetKey}!`
+                message: `Nạp thêm ${rewardUses} lượt thành công vào key ${targetKey}!`
             });
 
         } else {
@@ -3769,7 +3898,7 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
                 hwid: null,
                 status: "active",
                 expire,
-                maxUses: creditsToUse,
+                maxUses: rewardUses,
                 usedCount: 0,
                 createdAt: now,
                 creatorUsername: freshUser.username,
@@ -3789,10 +3918,10 @@ app.post("/api/buy-license/credit", requireUserAuth, async (req, res) => {
                 success: true,
                 mode: "new",
                 createdKey: newKey,
-                addedUses: creditsToUse,
+                addedUses: rewardUses,
                 newBalance,
                 newCredits,
-                message: `Tạo License Key mới thành công: ${newKey} (+${creditsToUse} lượt)!`
+                message: `Tạo License Key mới thành công: ${newKey} (+${rewardUses} lượt)!`
             });
         }
 
