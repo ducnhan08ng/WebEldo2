@@ -1328,8 +1328,8 @@ async function fetchElAccountContext(hostId, userKey, platform, useProxy, email 
     const payload = {
         HOST_ID: hostId,
         MODE: "PACKAGE",
-        VER_DATE: "20260903",
-        VERSION: isAtv ? "EL_ATV_20260903" : "EL_AMO_20260903",
+        VER_DATE: "20260922",
+        VERSION: isAtv ? "EL_ATV_20260922" : "EL_AMO_20260922",
         SDK_VERSION: "0",
         MODEL_NAME: "",
         TARGET_PLATFORM: 12,
@@ -1432,7 +1432,7 @@ async function fetchElRunCount(hostId, platform, realUserKey, preferredUseProxy 
     const url = BASE_URLS[platform] + "Mobile_Link/get_cur_run_count.php";
     const body =
         `HOST_ID=${encodeURIComponent(hostId)}` +
-        `&VER_DATE=20260903` +
+        `&VER_DATE=20260922` +
         `&IS_SYNC=false` +
         `&USER_KEY=${encodeURIComponent(realUserKey || "")}` +
         `&RUN_COUNT=3&`;
@@ -1494,9 +1494,9 @@ async function sendElRuby({ hostId, context, runCount, rubyHack, useProxy, email
     const payload = {
         HOST_ID: hostId, USER_NAME: accountName, USER_PHONE: userPhone, USER_ADDRESS: userAddress,
         COUNTRY: country, PLATFORM: platformName,
-        VERSION: context.platform === "ATV" ? "EL_ATV_20260903" : "EL_AMO_20260903",
+        VERSION: context.platform === "ATV" ? "EL_ATV_20260922" : "EL_AMO_20260922",
         DATA1: rawData1, DATA2: data2, DATA3: data3, ETC: etc,
-        LANG: lang, MODE: "ruby", VER_DATE: "20260903", STAGE: 1,
+        LANG: lang, MODE: "ruby", VER_DATE: "20260922", STAGE: 1,
         RUN_COUNT: runCount, IS_SYNC: "false", USER_KEY: context.realUserKey || "", EMAIL: email
     };
     const accountKeys = generateAccountKeys(context.timestamp, context.today, context.data2 || "");
@@ -1592,7 +1592,7 @@ async function sendElCharacterGacha({ hostId, context, runCount, character, useP
             HOST_ID: hostId, USER_NAME: accountName, USER_PHONE: userPhone, USER_ADDRESS: userAddress,
             COUNTRY: country, PLATFORM: platformName, VERSION: version,
             DATA1: preUpdatedData1, DATA2: originData2, DATA3: originData3,
-            ETC: preEtc, LANG: lang, MODE: "stageclear", VER_DATE: "20260903", STAGE: 1,
+            ETC: preEtc, LANG: lang, MODE: "stageclear", VER_DATE: "20260922", STAGE: 1,
             RUN_COUNT: runCount, IS_SYNC: "false", USER_KEY: userKey, EMAIL: email
         }
     });
@@ -1617,7 +1617,7 @@ async function sendElCharacterGacha({ hostId, context, runCount, character, useP
             HOST_ID: hostId, BP: 0, ACT: "SELECTION",
             DATA1: data1GachaStage, DATA2: finalData2, ITEM: item,
             LANG: lang, RUN_COUNT: runCount, ETC: gachaEtc,
-            VER_DATE: "20260903", IS_SYNC: "false", USER_KEY: userKey,
+            VER_DATE: "20260922", IS_SYNC: "false", USER_KEY: userKey,
             VERSION: version, EMAIL: email
         }
     });
